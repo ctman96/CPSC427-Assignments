@@ -17,10 +17,5 @@ Creative portion:
 Advanced controls:
     - Salmon rotates to face mouse
     - leftmouse applies acceleration in the direction of the mouse
-Before the template changed and before I read the other assignments, added:
-- right ctrl fires bullets (in the direction being faced) which kill turtles
-
-Ideas for creative part:
-Better background
-UI to show points and debug details. Lives?
-Add states, and create a menu, leaderboard, and difficulty (if randomizing turtles)
+    Before the template changed and before I read the other assignments, added:
+    - right ctrl fires bullets (in the direction of the mouse) which kill turtles
