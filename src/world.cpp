@@ -5,6 +5,7 @@
 #include <string.h>
 #include <cassert>
 #include <sstream>
+#include <iostream>
 
 // Same as static in c, local to compilation unit
 namespace
@@ -164,11 +165,16 @@ void World::destroy()
 bool World::update(float elapsed_ms)
 {
 
+	m_freeze_timer < 0 ? m_freeze_timer = 0 : m_freeze_timer -= elapsed_ms;
+	if (m_freeze_timer > 0) return true;
+
 	if (keyMap[GLFW_KEY_A]) {
 		m_debug = true;
+		m_water.setDistort(false);
 	}
 	if (keyMap[GLFW_KEY_B]) {
 		m_debug = false;
+		m_water.setDistort(true);
 	}
 
 	int w, h;
@@ -342,6 +348,7 @@ bool World::update(float elapsed_ms)
 // http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-14-render-to-texture/
 void World::draw()
 {
+	if (m_freeze_timer > 0) return;
 	// Clearing error buffer
 	gl_flush_errors();
 
@@ -413,10 +420,13 @@ void World::draw()
 	glBindTexture(GL_TEXTURE_2D, m_screen_tex.id);
 
 	m_water.draw(projection_2D);
+	// TODO some way to disable water shader?
 
 
 	if (m_debug) {
 		m_debug_view.draw(projection_2D, &m_salmon, &m_fish);
+		if (m_freeze_timer <= 0 && m_salmon.getM_debug_collision_points().size() > 0)
+			m_freeze_timer = 1000;
 	}
 	m_salmon.clear_debug_collision();
 
@@ -478,27 +488,7 @@ void World::on_key(GLFWwindow*, int key, int, int action, int mod)
 	// action can be GLFW_PRESS GLFW_RELEASE GLFW_REPEAT
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-    // Movement keys- track if being held
-    if (key == GLFW_KEY_UP)
-        (action == GLFW_PRESS || action == GLFW_REPEAT) ? keyMap[GLFW_KEY_UP] = true :  keyMap[GLFW_KEY_UP] = false;
-    if (key == GLFW_KEY_DOWN)
-        (action == GLFW_PRESS || action == GLFW_REPEAT) ? keyMap[GLFW_KEY_DOWN] = true : keyMap[GLFW_KEY_DOWN] = false;
-    if (key == GLFW_KEY_LEFT)
-        (action == GLFW_PRESS || action == GLFW_REPEAT) ? keyMap[GLFW_KEY_LEFT] = true : keyMap[GLFW_KEY_LEFT] = false;
-    if (key == GLFW_KEY_RIGHT)
-        (action == GLFW_PRESS || action == GLFW_REPEAT) ? keyMap[GLFW_KEY_RIGHT] = true : keyMap[GLFW_KEY_RIGHT] = false;
-
-    if (key == GLFW_KEY_RIGHT_CONTROL)
-        (action == GLFW_PRESS || action == GLFW_REPEAT) ? keyMap[GLFW_KEY_RIGHT_CONTROL] = true :  keyMap[GLFW_KEY_RIGHT_CONTROL] = false;
-
-    // Switch to advanced controls
-    if (action == GLFW_RELEASE && key == GLFW_KEY_A){
-    	keyMap[GLFW_KEY_A] = true;
-    }
-    // Switch to basic controls
-    if (action == GLFW_RELEASE && key == GLFW_KEY_B) {
-		keyMap[GLFW_KEY_A] = false;
-    }
+	(action == GLFW_PRESS || action == GLFW_REPEAT) ? keyMap[key] = true : keyMap[key] = false;
 
 	// Resetting game
 	if (action == GLFW_RELEASE && key == GLFW_KEY_R)

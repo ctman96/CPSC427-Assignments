@@ -100,4 +100,6 @@ private:
 
 	bool m_debug;
     DebugView m_debug_view;
+
+	float m_freeze_timer;
 };

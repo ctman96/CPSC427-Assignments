@@ -3,6 +3,7 @@
 uniform sampler2D screen_texture;
 uniform float time;
 uniform float dead_timer;
+uniform bool should_distort;
 
 in vec2 uv;
 
@@ -15,8 +16,10 @@ vec2 distort(vec2 uv)
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 	vec2 coord = uv.xy;
-	coord.x = uv.x + sin( (10*uv.y + time) / 4) / 50;
-	coord.y = uv.y + sin( (10*uv.x + time) / 4) / 50;
+	if (should_distort){
+		coord.x = uv.x + sin((10*uv.y + time) / 4) / 50;
+		coord.y = uv.y + sin((10*uv.x + time) / 4) / 50;
+	}
     return coord;
 }
 

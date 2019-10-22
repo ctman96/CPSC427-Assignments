@@ -59,6 +59,7 @@ private:
 	float m_light_up_countdown_ms; // Used to keep track for how long the salmon should be lit up
 	bool m_is_alive; // True if the salmon is alive
 	vec2 m_velocity; // Velocity
+	bool m_update_rotation;
 
   	std::vector<Vertex> m_vertices;
 	std::vector<uint16_t> m_indices;

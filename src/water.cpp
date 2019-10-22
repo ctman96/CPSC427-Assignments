@@ -68,9 +68,11 @@ void Water::draw(const mat3& projection) {
 	// Set clock
 	GLuint screen_text_uloc = glGetUniformLocation(effect.program, "screen_texture");
 	GLuint time_uloc = glGetUniformLocation(effect.program, "time");
+	GLuint distort_uloc = glGetUniformLocation(effect.program, "should_distort");
 	GLuint dead_timer_uloc = glGetUniformLocation(effect.program, "dead_timer");
 	glUniform1i(screen_text_uloc, 0);
 	glUniform1f(time_uloc, (float)(glfwGetTime() * 10.0f));
+	glUniform1i(distort_uloc, distort);
 	glUniform1f(dead_timer_uloc, (m_dead_time > 0) ? (float)((glfwGetTime() - m_dead_time) * 10.0f) : -1);
 
 	// Draw the screen texture on the quad geometry
@@ -84,4 +86,12 @@ void Water::draw(const mat3& projection) {
 	// Draw
 	glDrawArrays(GL_TRIANGLES, 0, 6); // 2*3 indices starting at 0 -> 2 triangles
 	glDisableVertexAttribArray(0);
+}
+
+bool Water::isDistort() const {
+	return distort;
+}
+
+void Water::setDistort(bool distort) {
+	Water::distort = distort;
 }

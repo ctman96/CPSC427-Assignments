@@ -104,15 +104,14 @@ void Salmon::update(float ms, std::map<int, bool> &keyMap, vec2 mouse_position, 
 	float step = motion.speed * (ms / 1000);
 	if (m_is_alive)
 	{
+	    // Delay changing rotation after a collision
+	    if (m_update_rotation) {
+            set_rotation(atan2(m_velocity.x, m_velocity.y));
+            m_update_rotation = false;
+	    }
 
 		float accelX = 0.f;
 		float accelY = 0.f;
-		/*
-		// Update rotation to face mouse
-		float rad = atan2(mouse_position.x - motion.position.x, mouse_position.y - motion.position.y);
-		float adjustedRad = rad - 3.14/2; // adjust rotation by 90 degrees
-		set_rotation(adjustedRad);
-		 */
 
 		// Move along direction
 		if (keyMap[GLFW_KEY_UP]) {
@@ -140,6 +139,12 @@ void Salmon::update(float ms, std::map<int, bool> &keyMap, vec2 mouse_position, 
 		vec2 tl = { screen.x - bufX, screen.y - bufY };
 		vec2 br = { bufX, bufY };
 
+		transform.begin();
+		transform.translate({motion.position.x, motion.position.y });
+		transform.scale(physics.scale);
+		transform.rotate(motion.radians - 3.14f/2);
+		transform.end();
+
 		bool flipX = false;
 		bool flipY = false;
         for(auto vertex : m_vertices) {
@@ -164,28 +169,26 @@ void Salmon::update(float ms, std::map<int, bool> &keyMap, vec2 mouse_position, 
             std::cout << "flipy" <<std::endl;
             m_velocity.y = -m_velocity.y;
         }
-        if (flipX || flipY) {
-            set_rotation(atan2(m_velocity.x, m_velocity.y));
+        if (flipX || flipY){
+			m_update_rotation = true;
+        } else {
+			// move based on velocity
+			motion.position.x += m_velocity.x;
+			motion.position.y += m_velocity.y;
+
+
+			// Decay velocity
+			float friction = 0.02;
+			if (m_velocity.x > 0.f)
+				m_velocity.x -= friction* m_velocity.x;
+			else if (m_velocity.x < 0.f)
+				m_velocity.x += -friction* m_velocity.x;
+
+			if (m_velocity.y > 0.f)
+				m_velocity.y -= friction*m_velocity.y;
+			else if (m_velocity.y < 0.f)
+				m_velocity.y += -friction*m_velocity.y;
         }
-
-        std::cout << m_velocity.x << "," << m_velocity.y << std::endl;
-
-        // move based on velocity
-        motion.position.x += m_velocity.x;
-        motion.position.y += m_velocity.y;
-
-
-        // Decay velocity
-        float friction = 0.02;
-        if (m_velocity.x > 0.f)
-            m_velocity.x -= friction* m_velocity.x;
-        else if (m_velocity.x < 0.f)
-            m_velocity.x += -friction* m_velocity.x;
-
-        if (m_velocity.y > 0.f)
-            m_velocity.y -= friction*m_velocity.y;
-        else if (m_velocity.y < 0.f)
-            m_velocity.y += -friction*m_velocity.y;
 	}
 	else
 	{
@@ -329,7 +332,7 @@ bool Salmon::collides_with_exact(int left, int right, int top, int bottom) {
 			pos.y >= top &&
 		  	pos.y <= bottom) {
 			ret = true;
-			m_debug_collision_points.emplace_back(vec2{pos.x, pos.y});
+			//m_debug_collision_points.emplace_back(vec2{pos.x, pos.y});
 		}
 	}
 	return ret;

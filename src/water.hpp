@@ -23,4 +23,9 @@ public:
 private:
 	// When salmon is alive, the time is set to -1
 	float m_dead_time;
+	bool distort = true;
+public:
+	bool isDistort() const;
+
+	void setDistort(bool distort);
 };
