@@ -57,7 +57,7 @@ bool Fish::init()
 		return false;
 
 	motion.radians = 0.f;
-	motion.speed = 380.f;
+	motion.speed = 190.f;
 
 	// Setting initial values, scale is negative to make it face the opposite way
 	// 1.0 would be as big as the original texture.
