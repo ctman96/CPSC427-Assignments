@@ -58,4 +58,7 @@ private:
 
   	std::vector<Vertex> m_vertices;
 	std::vector<uint16_t> m_indices;
+	mat3 m_projection;
+
+	bool collides_with_exact(int left, int right, int top, int bottom);
 };

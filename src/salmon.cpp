@@ -9,6 +9,7 @@
 #include <string>
 #include <algorithm>
 #include <cmath>
+#include <iostream>
 
 bool Salmon::init()
 {
@@ -115,12 +116,12 @@ void Salmon::update(float ms, std::map<int, bool> &keyMap, vec2 mouse_position)
 
 		// Move along direction
 		if (keyMap[GLFW_KEY_UP]) {
-			accelX = static_cast<float>(2 * sin(motion.radians));
-			accelY = static_cast<float>(2 * cos(motion.radians));
+			accelX = 2 * sin(motion.radians);
+			accelY = 2 * cos(motion.radians);
 		}
 		if (keyMap[GLFW_KEY_DOWN]) {
-			accelX = static_cast<float>(-2 * sin(motion.radians));
-			accelY = static_cast<float>(-2 * cos(motion.radians));
+			accelX = -2 * sin(motion.radians);
+			accelY = -2 * cos(motion.radians);
 		}
 
 		// Rotate
@@ -163,6 +164,7 @@ void Salmon::update(float ms, std::map<int, bool> &keyMap, vec2 mouse_position)
 
 void Salmon::draw(const mat3& projection)
 {
+	m_projection = projection;
 	transform.begin();
 
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -175,7 +177,7 @@ void Salmon::draw(const mat3& projection)
 	// scale()
 
 
-	transform.translate({ motion.position.x, motion.position.y });
+	transform.translate({motion.position.x, motion.position.y });
     transform.scale(physics.scale);
     transform.rotate(motion.radians - 3.14f/2);
 
@@ -242,29 +244,54 @@ void Salmon::draw(const mat3& projection)
 // need to try to use this technique.
 bool Salmon::collides_with(const Turtle& turtle)
 {
-	float dx = motion.position.x - turtle.get_position().x;
-	float dy = motion.position.y - turtle.get_position().y;
+	vec2 turtlepos =  turtle.get_position();
+	vec2 turtlebox = turtle.get_bounding_box();
+	float dx = motion.position.x - turtlepos.x;
+	float dy = motion.position.y - turtlepos.y;
 	float d_sq = dx * dx + dy * dy;
-	float other_r = std::max(turtle.get_bounding_box().x, turtle.get_bounding_box().y);
+	float other_r = std::max(turtlebox.x, turtlebox.y);
 	float my_r = std::max(physics.scale.x, physics.scale.y);
 	float r = std::max(other_r, my_r);
 	r *= 0.6f;
 	if (d_sq < r * r)
-		return true;
+		return collides_with_exact(turtlepos.x-(turtlebox.x/2), turtlepos.x+(turtlebox.x/2), turtlepos.y-(turtlebox.y/2), turtlepos.y+(turtlebox.y/2));
 	return false;
 }
 
 bool Salmon::collides_with(const Fish& fish)
 {
-	float dx = motion.position.x - fish.get_position().x;
-	float dy = motion.position.y - fish.get_position().y;
+	vec2 fishpos =  fish.get_position();
+	vec2 fishbox = fish.get_bounding_box();
+	float dx = motion.position.x - fishpos.x;
+	float dy = motion.position.y - fishpos.y;
 	float d_sq = dx * dx + dy * dy;
-	float other_r = std::max(fish.get_bounding_box().x, fish.get_bounding_box().y);
+	float other_r = std::max(fishbox.x, fishbox.y);
 	float my_r = std::max(physics.scale.x, physics.scale.y);
 	float r = std::max(other_r, my_r);
 	r *= 0.6f;
-	if (d_sq < r * r)
-		return true;
+	if (d_sq < r * r){
+		return collides_with_exact(fishpos.x-(fishbox.x/2), fishpos.x+(fishbox.x/2), fishpos.y-(fishbox.y/2), fishpos.y+(fishbox.y/2));
+	}
+	return false;
+}
+
+// Check exact collision with a box
+bool Salmon::collides_with_exact(int left, int right, int top, int bottom) {
+
+	//std::cout << motion.position.x << "," << motion.position.y << std::endl;
+
+	for(auto vertex : m_vertices) {
+		//std::cout << std::endl;
+		//std::cout << vertex.position.x << "," << vertex.position.y << std::endl;
+		vec3 pos = mul(transform.out, vec3{vertex.position.x, vertex.position.y, 1.0});
+		//std::cout << pos.x << "," << pos.y << std::endl;
+		if (pos.x >= left &&
+		  	pos.x <= right &&
+			pos.y >= top &&
+		  	pos.y <= bottom) {
+			return true;
+		}
+	}
 	return false;
 }
 
