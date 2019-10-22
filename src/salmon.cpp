@@ -75,7 +75,7 @@ bool Salmon::init()
 	// Setting initial values
 	motion.position = { 50.f, 100.f };
 	motion.radians = 0.f;
-	motion.speed = 200.f;
+	motion.speed = 100.f;
 
 	physics.scale = { -35.f, 35.f };
 
@@ -104,28 +104,31 @@ void Salmon::update(float ms, std::map<int, bool> &keyMap, vec2 mouse_position)
 	if (m_is_alive)
 	{
 
-		int accelX = 0.f;
-		int accelY = 0.f;
-		if (keyMap[GLFW_KEY_A]) {
-			// Update rotation to face mouse
-			float rad = atan2(mouse_position.x - motion.position.x, mouse_position.y - motion.position.y);
-			float adjustedRad = rad - 3.14/2; // adjust rotation by 90 degrees
-			set_rotation(adjustedRad);
+		float accelX = 0.f;
+		float accelY = 0.f;
+		/*
+		// Update rotation to face mouse
+		float rad = atan2(mouse_position.x - motion.position.x, mouse_position.y - motion.position.y);
+		float adjustedRad = rad - 3.14/2; // adjust rotation by 90 degrees
+		set_rotation(adjustedRad);
+		 */
 
-			// mousedown movement
-			if (keyMap[GLFW_MOUSE_BUTTON_LEFT]) {
-				accelX = 2*sin(rad);
-				accelY = 2*cos(rad);
-			}
-		} else {
-			// Basic rotation based on mouse location
-			set_rotation(mouse_position.x / 100);
+		// Move along direction
+		if (keyMap[GLFW_KEY_UP]) {
+			accelX = static_cast<float>(2 * sin(motion.radians));
+			accelY = static_cast<float>(2 * cos(motion.radians));
+		}
+		if (keyMap[GLFW_KEY_DOWN]) {
+			accelX = static_cast<float>(-2 * sin(motion.radians));
+			accelY = static_cast<float>(-2 * cos(motion.radians));
+		}
 
-			// Arrow key movement;
-			if (keyMap[GLFW_KEY_UP]) accelY -= 1.f;
-			if (keyMap[GLFW_KEY_DOWN]) accelY += 1.f;
-			if (keyMap[GLFW_KEY_LEFT]) accelX -= 1.f;
-			if (keyMap[GLFW_KEY_RIGHT]) accelX += 1.f;
+		// Rotate
+		if (keyMap [GLFW_KEY_LEFT]) {
+			motion.radians -= step / 20;
+		}
+		if (keyMap [GLFW_KEY_RIGHT]) {
+			motion.radians += step / 20;
 		}
 
         accelerate(accelX,accelY);
@@ -174,7 +177,7 @@ void Salmon::draw(const mat3& projection)
 
 	transform.translate({ motion.position.x, motion.position.y });
     transform.scale(physics.scale);
-    transform.rotate(motion.radians);
+    transform.rotate(motion.radians - 3.14f/2);
 
 	transform.end();
 
