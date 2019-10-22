@@ -18,7 +18,7 @@ public:
 	
 	// Update salmon position based on direction
 	// ms represents the number of milliseconds elapsed from the previous update() call
-	void update(float ms, std::map<int, bool> &keyMap, vec2 mouse_position);
+	void update(float ms, std::map<int, bool> &keyMap, vec2 mouse_position, vec2 screen);
 	
 	// Renders the salmon
 	void draw(const mat3& projection)override;

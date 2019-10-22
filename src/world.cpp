@@ -129,7 +129,7 @@ bool World::init(vec2 screen)
 	m_current_speed = 1.f;
 	m_debug = false;
 
-	return m_salmon.init() && m_water.init() && m_pebbles_emitter.init() && m_debug_view.init();
+	return m_salmon.init() && m_water.init() && m_pebbles_emitter.init() && m_debug_view.init(screen);
 }
 
 // Releases all the associated resources
@@ -230,7 +230,7 @@ bool World::update(float elapsed_ms)
 	
 	// Updating all entities, making the turtle and fish
 	// faster based on current
-	m_salmon.update(elapsed_ms, keyMap, mouse_position);
+	m_salmon.update(elapsed_ms, keyMap, mouse_position, screen);
 	for (auto& turtle : m_turtles)
 		turtle.update(elapsed_ms * m_current_speed);
 	for (auto& fish : m_fish)
@@ -348,6 +348,7 @@ void World::draw()
 	// Getting size of window
 	int w, h;
 	glfwGetFramebufferSize(m_window, &w, &h);
+	vec2 screen = { (float)w / m_screen_scale, (float)h / m_screen_scale };
 
 	// Updating window title with points
 	std::stringstream title_ss;

@@ -74,7 +74,7 @@ bool Salmon::init()
 		return false;
 	
 	// Setting initial values
-	motion.position = { 50.f, 100.f };
+	motion.position = { 300.f, 500.f };
 	motion.radians = 0.f;
 	motion.speed = 100.f;
 
@@ -99,7 +99,7 @@ void Salmon::destroy()
 }
 
 // Called on each frame by World::update()
-void Salmon::update(float ms, std::map<int, bool> &keyMap, vec2 mouse_position)
+void Salmon::update(float ms, std::map<int, bool> &keyMap, vec2 mouse_position, vec2 screen)
 {
 	float step = motion.speed * (ms / 1000);
 	if (m_is_alive)
@@ -133,6 +133,42 @@ void Salmon::update(float ms, std::map<int, bool> &keyMap, vec2 mouse_position)
 		}
 
         accelerate(accelX,accelY);
+
+		float bufX = screen.x * 0.95f;
+		float bufY = screen.y * 0.95f;
+
+		vec2 tl = { screen.x - bufX, screen.y - bufY };
+		vec2 br = { bufX, bufY };
+
+		bool flipX = false;
+		bool flipY = false;
+        for(auto vertex : m_vertices) {
+            vec3 pos = mul(transform.out, vec3{vertex.position.x, vertex.position.y, 1.0});
+            bool collision = false;
+            if ((m_velocity.x < 0 && pos.x <= tl.x) || (m_velocity.x > 0 && pos.x >= br.x)) {
+                flipX = true;
+                collision = true;
+            }
+            if ((m_velocity.y < 0 && pos.y <= tl.y) || (m_velocity.y > 0 && pos.y >= br.y)) {
+                flipY = true;
+                collision = true;
+            }
+            if (collision)
+                m_debug_collision_points.emplace_back(vec2{pos.x, pos.y});
+        }
+        if (flipX) {
+            std::cout << "flipx" << std::endl;
+            m_velocity.x = -m_velocity.x;
+        }
+        if (flipY) {
+            std::cout << "flipy" <<std::endl;
+            m_velocity.y = -m_velocity.y;
+        }
+        if (flipX || flipY) {
+            set_rotation(atan2(m_velocity.x, m_velocity.y));
+        }
+
+        std::cout << m_velocity.x << "," << m_velocity.y << std::endl;
 
         // move based on velocity
         motion.position.x += m_velocity.x;
