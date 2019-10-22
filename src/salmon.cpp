@@ -244,6 +244,7 @@ void Salmon::draw(const mat3& projection)
 // need to try to use this technique.
 bool Salmon::collides_with(const Turtle& turtle)
 {
+	// TODO salmon bounding box
 	vec2 turtlepos =  turtle.get_position();
 	vec2 turtlebox = turtle.get_bounding_box();
 	float dx = motion.position.x - turtlepos.x;
@@ -260,6 +261,7 @@ bool Salmon::collides_with(const Turtle& turtle)
 
 bool Salmon::collides_with(const Fish& fish)
 {
+	// TODO salmon bounding box
 	vec2 fishpos =  fish.get_position();
 	vec2 fishbox = fish.get_bounding_box();
 	float dx = motion.position.x - fishpos.x;
@@ -279,6 +281,7 @@ bool Salmon::collides_with(const Fish& fish)
 bool Salmon::collides_with_exact(int left, int right, int top, int bottom) {
 
 	//std::cout << motion.position.x << "," << motion.position.y << std::endl;
+	bool ret = false;
 
 	for(auto vertex : m_vertices) {
 		//std::cout << std::endl;
@@ -289,10 +292,11 @@ bool Salmon::collides_with_exact(int left, int right, int top, int bottom) {
 		  	pos.x <= right &&
 			pos.y >= top &&
 		  	pos.y <= bottom) {
-			return true;
+			ret = true;
+			m_debug_collision_points.emplace_back(vec2{pos.x, pos.y});
 		}
 	}
-	return false;
+	return ret;
 }
 
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -352,4 +356,12 @@ void Salmon::kill()
 void Salmon::light_up()
 {
 	m_light_up_countdown_ms = 1500.f;
+}
+
+void Salmon::clear_debug_collision() {
+	m_debug_collision_points.clear();
+}
+
+const std::vector<vec2> &Salmon::getM_debug_collision_points() const {
+	return m_debug_collision_points;
 }

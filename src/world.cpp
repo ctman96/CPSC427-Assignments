@@ -127,8 +127,9 @@ bool World::init(vec2 screen)
 	fprintf(stderr, "Loaded music\n");
 
 	m_current_speed = 1.f;
+	m_debug = false;
 
-	return m_salmon.init() && m_water.init() && m_pebbles_emitter.init();
+	return m_salmon.init() && m_water.init() && m_pebbles_emitter.init() && m_debug_view.init();
 }
 
 // Releases all the associated resources
@@ -162,6 +163,14 @@ void World::destroy()
 // Update our game world
 bool World::update(float elapsed_ms)
 {
+
+	if (keyMap[GLFW_KEY_A]) {
+		m_debug = true;
+	}
+	if (keyMap[GLFW_KEY_B]) {
+		m_debug = false;
+	}
+
 	int w, h;
 	glfwGetFramebufferSize(m_window, &w, &h);
 	vec2 screen = { (float)w / m_screen_scale, (float)h / m_screen_scale };
@@ -403,6 +412,12 @@ void World::draw()
 	glBindTexture(GL_TEXTURE_2D, m_screen_tex.id);
 
 	m_water.draw(projection_2D);
+
+
+	if (m_debug) {
+		m_debug_view.draw(projection_2D, &m_salmon, &m_fish);
+	}
+	m_salmon.clear_debug_collision();
 
 	//////////////////
 	// Presenting

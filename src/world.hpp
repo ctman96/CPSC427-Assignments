@@ -8,6 +8,7 @@
 #include "water.hpp"
 #include "bullet.hpp"
 #include "pebbles.hpp"
+#include "debug/DebugView.hpp"
 
 // stlib
 #include <vector>
@@ -96,4 +97,7 @@ private:
 	// C++ rng
 	std::default_random_engine m_rng;
 	std::uniform_real_distribution<float> m_dist; // default 0..1
+
+	bool m_debug;
+    DebugView m_debug_view;
 };
