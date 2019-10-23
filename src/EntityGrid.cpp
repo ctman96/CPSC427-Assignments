@@ -5,6 +5,8 @@
 #include <cmath>
 #include <iostream>
 #include <algorithm>
+#include <set>
+#include <limits>
 #include "EntityGrid.hpp"
 
 bool EntityGrid::init(int width, int height, int size) {
@@ -32,7 +34,7 @@ bool EntityGrid::init(int width, int height, int size) {
         //std::cout << "row " << i << ": ";
         for (int j = 0; j < gridH+1; ++j) {
             Vertex vertex;
-            vertex.position = {i*size, j*size, 1.f};
+            vertex.position = {(float)(i*size), (float)(j*size), 1.f};
             m_vertices.emplace_back(vertex);
             //std::cout << j << "[" << vertices[vind].position.x << "," << vertices[vind].position.y <<"] ";
         }
@@ -100,8 +102,9 @@ bool EntityGrid::init(int width, int height, int size) {
 
 void EntityGrid::clear() {
     for (int x = 0; x < gridW; x++) {
+        grid[x].clear();
         for (int y = 0; y < gridH; y++) {
-            grid[x][y] = EType::empty;
+            grid[x].emplace_back(EType::empty);
         }
     }
 }
@@ -285,4 +288,118 @@ void EntityGrid::draw(const mat3 &projection, int index, EType type) {
 
     // Drawing!
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, nullptr);
+}
+
+std::vector<vec2> EntityGrid::getPath(const Fish& fish) {
+    //TODO pre-check if at destination;
+
+    vec2 fbox = fish.get_bounding_box();
+    vec2 fpos = fish.get_position();
+
+    float wr = fbox.x/2;
+    float hr = fbox.y/2;
+    vec2 tl = {fpos.x-wr, fpos.y-hr};
+    vec2 br = {fpos.x+wr, fpos.y+hr};
+
+    auto l = bound((int)std::floor(tl.x / (float)size), 0, gridW);
+    auto r = bound((int)std::ceil(br.x / (float)size), l, gridW);
+    auto t = bound((int)std::floor(tl.y / (float)size), 0, gridH);
+    auto b = bound((int)std::ceil(br.y / (float)size), t, gridH);
+
+    auto w = r - l;
+    auto h = b - t;
+
+    const float MAX = std::numeric_limits<float>::max();
+
+    // Generate node map with initial values
+    Node map[gridW][gridH];
+    for (int x = 0; x < gridW; x++){
+        for (int y = 0; y < gridH; y++){
+            map[x][y].position = {x, y};
+            map[x][y].parent = {-1,-1};
+            map[x][y].f = MAX;
+            map[x][y].g = map[x][y].f;
+            map[x][y].h = map[x][y].g;
+        }
+    }
+
+    // Set starting node
+    int x = (int)std::floor(l/2); // TODO??
+    int y = (int)std::floor(t/2);
+    map[x][y].f = 0.0;
+    map[x][y].g = 0.0;
+    map[x][y].h = 0.0;
+    map[x][y].parent = {x,y};
+
+    std::set<Node> open;
+    open.emplace(map[x][y]);
+
+    bool closed[gridW][gridH];
+
+    do {
+        // Get and remove lowest f score node from open
+        auto it = open.begin();
+        Node node = *it;
+        open.erase(open.begin());
+        // Add to closed
+        closed[node.position.x][node.position.y] = true;
+
+        // Get adjacent
+        pair adjacent[4] = {{x-1,y}, {x,y-1}, {x+1, y}, {x, y+1}};
+        for (auto n : adjacent) {
+            // ignore invalid
+            if (n.x < 0 || n.x >= gridW || n.y < 0 || n.y >= gridH) continue;
+
+            // Check for destination (left edge of map)
+            if (n.x == 0) {
+                map[n.x][n.y].parent = node.position;
+                std::vector<vec2> path;
+                int px = n.x;
+                int py = n.y;
+                // Create path
+                while (!(map[px][py].parent.x == px && map[px][py].parent.y == py)
+                       && map[px][py].position.x == -1 && map[px][py].position.y == -1) {
+                    vec2 pos = {
+                            (float) (map[px][py].position.x * size) + (size / 2.f),
+                            (float) (map[px][py].position.y * size) + (size / 2.f),
+                    };
+                    path.emplace_back(pos);
+
+                    pair temp = map[px][py].parent;
+                    px = temp.x;
+                    py = temp.y;
+                }
+                // Add start node
+                vec2 pos = {
+                        (float) (map[px][py].position.x * size) + (size / 2.f),
+                        (float) (map[px][py].position.y * size) + (size / 2.f),
+                };
+                path.emplace_back(pos);
+
+                return path;
+            }
+
+            // check if not already closed
+            if (!closed[node.position.x][node.position.y]){
+                // calculate values
+                float newG = node.g + 1.f;
+                float newH = std::abs(n.x); // heuristic = straight line distance to the edge of map
+                float newF = newG + newH;
+
+                // TODO clearance checking?
+
+                // Only update if better path
+                if (map[n.x][n.y].f == MAX || map[n.x][n.y].f > newF) {
+                    map[n.x][n.y].parent = node.position;
+                    map[n.x][n.y].f = newF;
+                    map[n.x][n.y].g = newG;
+                    map[n.x][n.y].h = newH;
+                    open.emplace(map[n.x][n.y]);
+                }
+            }
+        }
+    } while (!open.empty());
+
+
+    return std::vector<vec2>();
 }

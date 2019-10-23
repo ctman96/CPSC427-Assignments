@@ -1,6 +1,9 @@
 #pragma once
 
 #include "common.hpp"
+#include "EntityGrid.hpp"
+
+class EntityGrid;
 
 // Salmon food
 class Fish : public Entity
@@ -17,7 +20,7 @@ public:
 	
 	// Update fish
 	// ms represents the number of milliseconds elapsed from the previous update() call
-	void update(float ms);
+	void update(float ms, EntityGrid* aiGrid);
 
 	// Renders the fish
 	// projection is the 2D orthographic projection matrix
@@ -31,4 +34,9 @@ public:
 
 	// Returns the fish' bounding box for collision detection, called by collides_with()
 	vec2 get_bounding_box() const;
+
+	const std::vector<vec2> &getM_path() const;
+
+private:
+	std::vector<vec2> m_path;
 };

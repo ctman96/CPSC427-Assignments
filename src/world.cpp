@@ -158,6 +158,8 @@ void World::destroy()
 	m_turtles.clear();
 	m_fish.clear();
 	m_bullets.clear();
+	m_debug_view.destroy();
+	// TODO cleanup new debug/ai stuff
 	glfwDestroyWindow(m_window);
 }
 
@@ -246,7 +248,7 @@ bool World::update(float elapsed_ms)
 	for (auto& turtle : m_turtles)
 		turtle.update(elapsed_ms * m_current_speed);
 	for (auto& fish : m_fish)
-		fish.update(elapsed_ms * m_current_speed);
+		fish.update(elapsed_ms * m_current_speed, &aiGrid);
 	for (auto& bullet : m_bullets)
 	    bullet.update(elapsed_ms*m_current_speed);
 
