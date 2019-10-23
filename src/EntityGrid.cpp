@@ -312,8 +312,8 @@ std::vector<vec2> EntityGrid::getPath(const Fish& fish) {
     auto w = r - l;
     auto h = b - t;
      */
-    auto fx = bound((int)std::ceil((fpos.x - (fbox.x/2.f)) / (float)size), 0, gridW-1);
-    auto fy =  bound((int)std::ceil((fpos.y - (fbox.y/2.f)) / (float)size), 0, gridH-1);
+    auto fx = bound((int)std::floor((fpos.x - fbox.x/2) / (float)size), 0, gridW-1);
+    auto fy =  bound((int)std::floor((fpos.y) / (float)size), 0, gridH-1);
 
     const float MAX = std::numeric_limits<float>::max();
 
@@ -342,17 +342,19 @@ std::vector<vec2> EntityGrid::getPath(const Fish& fish) {
 
     std::set<Node> open;
     open.emplace(map[x][y]);
+    int debugopencount = 1;
 
     if (DEBUG_LOG)std::cout << std::endl;
     if (DEBUG_LOG)std::cout << "=========================" << std::endl;
     if (DEBUG_LOG)std::cout << "startSearch" << std::endl;
     if (DEBUG_LOG)std::cout << std::endl;
 
+    int iterN = 0;
     do {
         if (DEBUG_LOG)std::cout << std::endl;
-        if (DEBUG_LOG)std::cout << "ITERATION START" << std::endl;
+        if (DEBUG_LOG)std::cout << "ITERATION START: " << iterN << std::endl;
         if (DEBUG_LOG)std::cout << std::endl;
-        if (DEBUG_LOG)std::cout << "open:" << std::endl;
+        if (DEBUG_LOG)std::cout << "open (" << open.size() << "):" << debugopencount << std::endl;
         // Get and remove lowest f score node from open
         Node node = *open.begin();
         int curX = node.position.x;
@@ -361,6 +363,7 @@ std::vector<vec2> EntityGrid::getPath(const Fish& fish) {
             if (DEBUG_LOG)printNode(node);
         }
         open.erase(open.begin());
+        debugopencount--;
         if (DEBUG_LOG)std::cout << std::endl;
         if (DEBUG_LOG)std::cout << "getLowest:" << std::endl;
         if (DEBUG_LOG) printNode(node);
@@ -394,8 +397,8 @@ std::vector<vec2> EntityGrid::getPath(const Fish& fish) {
                 while (!(map[px][py].parent.x == px && map[px][py].parent.y == py)
                        && map[px][py].position.x != -1 && map[px][py].position.y != -1) {
                     vec2 pos = {
-                            (float) (map[px][py].position.x * size) + (size / 2.f),
-                            (float) (map[px][py].position.y * size) + (size / 2.f),
+                            (float) (map[px][py].position.x * size),
+                            (float) (map[px][py].position.y * size),
                     };
                     path.emplace_back(pos);
                     if (DEBUG_LOG)std::cout << "(" << pos.x <<","<< pos.y<<")" << ", ";
@@ -405,12 +408,13 @@ std::vector<vec2> EntityGrid::getPath(const Fish& fish) {
                     py = temp.y;
                 }
                 // Add start node
-                vec2 pos = {
+                /*vec2 pos = {
                         (float) (map[px][py].position.x * size) + (size / 2.f),
                         (float) (map[px][py].position.y * size) + (size / 2.f),
                 };
                 path.emplace_back(pos);
                 if (DEBUG_LOG)std::cout << "(" << pos.x <<","<< pos.y<<")" << std::endl;
+                 */
 
                 if (DEBUG_LOG)std::cout << std::endl;
                 if (DEBUG_LOG)std::cout << "successSearch" << std::endl;
@@ -437,7 +441,9 @@ std::vector<vec2> EntityGrid::getPath(const Fish& fish) {
                     map[adjX][adjY].f = newF;
                     map[adjX][adjY].g = newG;
                     map[adjX][adjY].h = newH;
+                    if (DEBUG_LOG)std::cout << "Contains? "<< open.count(map[adjX][adjY]) << std::endl;
                     open.emplace(map[adjX][adjY]);
+                    debugopencount++;
                     if (DEBUG_LOG)std::cout << "Added node to open: " << std::endl;
                     if (DEBUG_LOG)printNode(map[adjX][adjY]);
                 } else {
@@ -447,11 +453,12 @@ std::vector<vec2> EntityGrid::getPath(const Fish& fish) {
                 if (DEBUG_LOG)std::cout << "Node (" << adjX <<","<< adjY << ") is closed" << std::endl;
             }
         }
+        iterN++;
         // TODO debug print grid of f values/closed
     } while (!open.empty());
 
     if (DEBUG_LOG)std::cout << std::endl;
-    if (DEBUG_LOG)std::cout << "failedSearch" << std::endl;
+    std::cout << "failedSearch" << std::endl;
     if (DEBUG_LOG)std::cout << std::endl;
     if (DEBUG_LOG)std::cout << "=========================" << std::endl;
 

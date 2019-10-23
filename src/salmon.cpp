@@ -446,6 +446,6 @@ vec2 Salmon::get_bounding_box() const {
 	float width = maxX - minX;
 	float height = maxY - minY;
 
-	return { std::fabs(physics.scale.x) * width, std::fabs(physics.scale.y) * height };
+	return { std::fabs(physics.scale.x) * width * 2, std::fabs(physics.scale.y) * height * 2};
 }
 
