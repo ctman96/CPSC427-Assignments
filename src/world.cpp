@@ -164,7 +164,6 @@ void World::destroy()
 // Update our game world
 bool World::update(float elapsed_ms)
 {
-
 	m_freeze_timer < 0 ? m_freeze_timer = 0 : m_freeze_timer -= elapsed_ms;
 	if (m_freeze_timer > 0) return true;
 
@@ -176,6 +175,13 @@ bool World::update(float elapsed_ms)
 		m_debug = false;
 		m_water.setDistort(true);
 	}
+
+	aiGrid.clear();
+	aiGrid.addToGrid(m_salmon);
+	for (auto turtle : m_turtles)
+		aiGrid.addToGrid(turtle);
+	for (auto fish : m_fish)
+		aiGrid.addToGrid(fish);
 
 	int w, h;
 	glfwGetFramebufferSize(m_window, &w, &h);

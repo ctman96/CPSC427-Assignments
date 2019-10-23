@@ -224,7 +224,6 @@ bool Salmon::check_wall_collisions(vec2 screen) {
 
 void Salmon::draw(const mat3& projection)
 {
-	m_projection = projection;
 	transform.begin();
 
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -428,5 +427,25 @@ const std::vector<vec2> &Salmon::getM_debug_collision_points() const {
 
 const std::vector<vec2> &Salmon::getM_debug_vertices() const {
 	return m_debug_vertices;
+}
+
+vec2 Salmon::get_bounding_box() const {
+	// TODO transform for scale, rotation?
+	// Uhh
+	float minX, minY = 99999;
+	float maxX, maxY = 0;
+	for (auto vertex : m_vertices) {
+		float x = vertex.position.x;
+		float y = vertex.position.y;
+		if (x < minX) minX = x;
+		if (x > maxX) maxX = x;
+		if (y < minY) minY = y;
+		if (y > maxY) maxY = y;
+	}
+
+	float width = maxX - minX;
+	float height = maxY - minY;
+
+	return { std::fabs(physics.scale.x) * width, std::fabs(physics.scale.y) * height };
 }
 

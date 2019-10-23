@@ -7,6 +7,8 @@
 
 #include <vector>
 #include "salmon.hpp"
+#include "fish.hpp"
+#include "turtle.hpp"
 #include "common.hpp"
 
 enum EType {
@@ -23,12 +25,15 @@ public:
     void addToGrid(const Fish& fish);
     void addToGrid(const Salmon& salmon);
     void addToGrid(const Turtle& turtle);
-    void draw(const mat3 &projection);
+    void addBoxToGrid(vec2 tl, vec2 br, EType type);
+    void draw(const mat3 &projection) override;
+    void draw(const mat3 &projection, int index, EType type);
 private:
     std::vector<std::vector<EType>> grid;
     int gridW;
     int gridH;
     int size;
+    std::vector<Vertex> m_vertices;
 };
 
 
