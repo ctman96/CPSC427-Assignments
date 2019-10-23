@@ -99,10 +99,10 @@ void Fish::update(float ms, EntityGrid* aiGrid)
 		//float dy = step*cos(rad);
 		float xdif=dest.x - motion.position.x;
 		float ydif=dest.y - motion.position.y;
-		if (std::abs(xdif) > std::abs(ydif)) {
+		if (std::abs(xdif) > 32) {
 			motion.position.x += (xdif > 0) ? step : -1*step;
 		}
-		if (std::abs(ydif) > std::abs(xdif)) {
+		if (std::abs(ydif) > 32) {
 			motion.position.y += (ydif > 0) ? step : -1*step;
 		}
 	} else {
