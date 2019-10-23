@@ -12,55 +12,55 @@
 bool EntityGrid::init(int width, int height, int size) {
     m_vertices.clear();
 
-    // std::cout << width << "," << height << "," << size << std::endl;
+    // if (DEBUG_LOG)std::cout << width << "," << height << "," << size << std::endl;
     gridW = (int)std::ceil((float)width / (float)size);
     gridH = (int)std::ceil((float)height / (float)size);
     this->size = size;
-    // std::cout << gridW << "," << gridH << std::endl;
+    // if (DEBUG_LOG)std::cout << gridW << "," << gridH << std::endl;
 
     for (int i = 0; i < gridW; ++i) {
-        //std::cout << "row " << i << ": ";
+        //if (DEBUG_LOG)std::cout << "row " << i << ": ";
         std::vector<EType> row;
         for (int j = 0; j < gridH; ++j) {
-            //std::cout << j << " ";
+            //if (DEBUG_LOG)std::cout << j << " ";
             row.emplace_back(EType::empty);
         }
         grid.emplace_back(row);
-        //std::cout << std::endl;
+        //if (DEBUG_LOG)std::cout << std::endl;
     }
 
     // Vertex vertices[(gridW+1)][(gridH+1)];
     for (int i=0; i < gridW+1; ++i) {
-        //std::cout << "row " << i << ": ";
+        //if (DEBUG_LOG)std::cout << "row " << i << ": ";
         for (int j = 0; j < gridH+1; ++j) {
             Vertex vertex;
             vertex.position = {(float)(i*size), (float)(j*size), 1.f};
             m_vertices.emplace_back(vertex);
-            //std::cout << j << "[" << vertices[vind].position.x << "," << vertices[vind].position.y <<"] ";
+            //if (DEBUG_LOG)std::cout << j << "[" << vertices[vind].position.x << "," << vertices[vind].position.y <<"] ";
         }
-        //std::cout << std::endl;
+        //if (DEBUG_LOG)std::cout << std::endl;
     }
-    // std::cout << (gridW+1) * (gridH+1) << std::endl;
+    // if (DEBUG_LOG)std::cout << (gridW+1) * (gridH+1) << std::endl;
 
 
     uint16_t indices[((gridW+1) * gridH * 2) + ((gridH+1) * gridW * 2)];
     int ind = 0;
-    // std::cout << "Vertical" << std::endl;
+    // if (DEBUG_LOG)std::cout << "Vertical" << std::endl;
     // Vertical grid lines
     for(int x = 0; x < gridW + 1; x++) {
         for(int y = 0; y < gridH; y++) {
             indices[ind++] = x * (gridH+1) + y;
             indices[ind++] = x * (gridH+1) + y+1;
-            // std::cout << "(" << x << "," << y << ") " << "["<< indices[ind-2]<< "]: " << vertices[indices[ind-2]].position.x << "," << vertices[indices[ind-2]].position.y << " | " << "["<< indices[ind-1] << "]: " << vertices[indices[ind-1]].position.x << "," << vertices[indices[ind-1]].position.y <<  std::endl;
+            // if (DEBUG_LOG)std::cout << "(" << x << "," << y << ") " << "["<< indices[ind-2]<< "]: " << vertices[indices[ind-2]].position.x << "," << vertices[indices[ind-2]].position.y << " | " << "["<< indices[ind-1] << "]: " << vertices[indices[ind-1]].position.x << "," << vertices[indices[ind-1]].position.y <<  std::endl;
         }
     }
-    // std::cout << "Horizontal" << std::endl;
+    // if (DEBUG_LOG)std::cout << "Horizontal" << std::endl;
     // Horizontal grid lines
     for(int y = 0; y < gridH+1; y++) {
         for(int x = 0; x < gridW; x++) {
             indices[ind++] = x * (gridH+1) + y;
             indices[ind++] = (x + 1) * (gridH+1) + y;
-            //std::cout << "(" << x << "," << y << ") " << "["<< indices[ind-2]<< "]: " << vertices[indices[ind-2]].position.x << "," << vertices[indices[ind-2]].position.y << " | " << "["<< indices[ind-1] << "]: " << vertices[indices[ind-1]].position.x << "," << vertices[indices[ind-1]].position.y <<  std::endl;
+            //if (DEBUG_LOG)std::cout << "(" << x << "," << y << ") " << "["<< indices[ind-2]<< "]: " << vertices[indices[ind-2]].position.x << "," << vertices[indices[ind-2]].position.y << " | " << "["<< indices[ind-1] << "]: " << vertices[indices[ind-1]].position.x << "," << vertices[indices[ind-1]].position.y <<  std::endl;
         }
     }
 
@@ -293,9 +293,12 @@ void EntityGrid::draw(const mat3 &projection, int index, EType type) {
 std::vector<vec2> EntityGrid::getPath(const Fish& fish) {
     //TODO pre-check if at destination;
 
-    vec2 fbox = fish.get_bounding_box();
-    vec2 fpos = fish.get_position();
+    bool DEBUG_LOG =false;
 
+    vec2 fpos = fish.get_position();
+    vec2 fbox = fish.get_bounding_box();
+
+    /*
     float wr = fbox.x/2;
     float hr = fbox.y/2;
     vec2 tl = {fpos.x-wr, fpos.y-hr};
@@ -308,8 +311,13 @@ std::vector<vec2> EntityGrid::getPath(const Fish& fish) {
 
     auto w = r - l;
     auto h = b - t;
+     */
+    auto fx = bound((int)std::ceil((fpos.x - (fbox.x/2.f)) / (float)size), 0, gridW-1);
+    auto fy =  bound((int)std::ceil((fpos.y - (fbox.y/2.f)) / (float)size), 0, gridH-1);
 
     const float MAX = std::numeric_limits<float>::max();
+
+    bool closed[gridW][gridH];
 
     // Generate node map with initial values
     Node map[gridW][gridH];
@@ -320,12 +328,13 @@ std::vector<vec2> EntityGrid::getPath(const Fish& fish) {
             map[x][y].f = MAX;
             map[x][y].g = map[x][y].f;
             map[x][y].h = map[x][y].g;
+            closed[x][y] = false;
         }
     }
 
     // Set starting node
-    int x = (int)std::floor(l/2); // TODO??
-    int y = (int)std::floor(t/2);
+    int x = fx; // TODO??
+    int y = fy;
     map[x][y].f = 0.0;
     map[x][y].g = 0.0;
     map[x][y].h = 0.0;
@@ -334,36 +343,62 @@ std::vector<vec2> EntityGrid::getPath(const Fish& fish) {
     std::set<Node> open;
     open.emplace(map[x][y]);
 
-    bool closed[gridW][gridH];
+    if (DEBUG_LOG)std::cout << std::endl;
+    if (DEBUG_LOG)std::cout << "=========================" << std::endl;
+    if (DEBUG_LOG)std::cout << "startSearch" << std::endl;
+    if (DEBUG_LOG)std::cout << std::endl;
 
     do {
+        if (DEBUG_LOG)std::cout << std::endl;
+        if (DEBUG_LOG)std::cout << "ITERATION START" << std::endl;
+        if (DEBUG_LOG)std::cout << std::endl;
+        if (DEBUG_LOG)std::cout << "open:" << std::endl;
         // Get and remove lowest f score node from open
-        auto it = open.begin();
-        Node node = *it;
+        Node node = *open.begin();
+        int curX = node.position.x;
+        int curY = node.position.y;
+        for (auto node : open) {
+            if (DEBUG_LOG)printNode(node);
+        }
         open.erase(open.begin());
+        if (DEBUG_LOG)std::cout << std::endl;
+        if (DEBUG_LOG)std::cout << "getLowest:" << std::endl;
+        if (DEBUG_LOG) printNode(node);
         // Add to closed
         closed[node.position.x][node.position.y] = true;
 
         // Get adjacent
-        pair adjacent[4] = {{x-1,y}, {x,y-1}, {x+1, y}, {x, y+1}};
+        pair adjacent[4] = {{curX-1,curY}, {curX,curY-1}, {curX+1, curY}, {curX, curY+1}};
         for (auto n : adjacent) {
+            int adjX = n.x;
+            int adjY = n.y;
             // ignore invalid
-            if (n.x < 0 || n.x >= gridW || n.y < 0 || n.y >= gridH) continue;
+            if (adjX < 0 || adjX >= gridW || adjY < 0 || adjY >= gridH ) {
+                if (DEBUG_LOG)std::cout << "Node (" << adjX <<","<< adjY << ") not valid, ignoring" << std::endl;
+                continue;
+            } else if (grid[adjX][adjY] == EType::player) {
+                if (DEBUG_LOG)std::cout << "Node (" << adjX <<","<< adjY << ") is player, ignoring" << std::endl;
+                continue;
+            }
 
             // Check for destination (left edge of map)
-            if (n.x == 0) {
-                map[n.x][n.y].parent = node.position;
+            if (adjX == 0) {
+                if (DEBUG_LOG)std::cout << "Node (" << adjX <<","<< adjY << ") is destination" << std::endl;
+                map[adjX][adjY].parent = node.position;
                 std::vector<vec2> path;
-                int px = n.x;
-                int py = n.y;
+
+                int px = adjX;
+                int py = adjY;
                 // Create path
+                if (DEBUG_LOG) std::cout << "Generating path: " << std::endl;
                 while (!(map[px][py].parent.x == px && map[px][py].parent.y == py)
-                       && map[px][py].position.x == -1 && map[px][py].position.y == -1) {
+                       && map[px][py].position.x != -1 && map[px][py].position.y != -1) {
                     vec2 pos = {
                             (float) (map[px][py].position.x * size) + (size / 2.f),
                             (float) (map[px][py].position.y * size) + (size / 2.f),
                     };
                     path.emplace_back(pos);
+                    if (DEBUG_LOG)std::cout << "(" << pos.x <<","<< pos.y<<")" << ", ";
 
                     pair temp = map[px][py].parent;
                     px = temp.x;
@@ -375,31 +410,58 @@ std::vector<vec2> EntityGrid::getPath(const Fish& fish) {
                         (float) (map[px][py].position.y * size) + (size / 2.f),
                 };
                 path.emplace_back(pos);
+                if (DEBUG_LOG)std::cout << "(" << pos.x <<","<< pos.y<<")" << std::endl;
 
+                if (DEBUG_LOG)std::cout << std::endl;
+                if (DEBUG_LOG)std::cout << "successSearch" << std::endl;
+                if (DEBUG_LOG)std::cout << std::endl;
+                if (DEBUG_LOG)std::cout << "=========================" << std::endl;
                 return path;
             }
 
             // check if not already closed
-            if (!closed[node.position.x][node.position.y]){
+            if (!closed[adjX][adjY]){
+                if (DEBUG_LOG)std::cout << "Node (" << adjX <<","<< adjY << ") is not closed, checking path" << std::endl;
                 // calculate values
                 float newG = node.g + 1.f;
-                float newH = std::abs(n.x); // heuristic = straight line distance to the edge of map
+                float newH = std::abs(adjX); // heuristic = straight line distance to the edge of map
                 float newF = newG + newH;
 
                 // TODO clearance checking?
 
+                if (DEBUG_LOG)std::cout << "new(f="<<newF<<",g="<<newG<<",h="<<newH<<"), old(f="<<map[adjX][adjY].f<<",g="<<map[adjX][adjY].g<<",h="<<map[adjX][adjY].h<<")"<< std::endl;
+
                 // Only update if better path
-                if (map[n.x][n.y].f == MAX || map[n.x][n.y].f > newF) {
-                    map[n.x][n.y].parent = node.position;
-                    map[n.x][n.y].f = newF;
-                    map[n.x][n.y].g = newG;
-                    map[n.x][n.y].h = newH;
-                    open.emplace(map[n.x][n.y]);
+                if (map[adjX][adjY].f == MAX || map[adjX][adjY].f > newF) {
+                    map[adjX][adjY].parent = node.position;
+                    map[adjX][adjY].f = newF;
+                    map[adjX][adjY].g = newG;
+                    map[adjX][adjY].h = newH;
+                    open.emplace(map[adjX][adjY]);
+                    if (DEBUG_LOG)std::cout << "Added node to open: " << std::endl;
+                    if (DEBUG_LOG)printNode(map[adjX][adjY]);
+                } else {
+                    if (DEBUG_LOG)std::cout << "Path not better" << std::endl;
                 }
+            } else {
+                if (DEBUG_LOG)std::cout << "Node (" << adjX <<","<< adjY << ") is closed" << std::endl;
             }
         }
+        // TODO debug print grid of f values/closed
     } while (!open.empty());
 
+    if (DEBUG_LOG)std::cout << std::endl;
+    if (DEBUG_LOG)std::cout << "failedSearch" << std::endl;
+    if (DEBUG_LOG)std::cout << std::endl;
+    if (DEBUG_LOG)std::cout << "=========================" << std::endl;
 
     return std::vector<vec2>();
+}
+
+void EntityGrid::printNode(Node node) {
+    std::cout << "Node { " << std::endl;
+    std::cout <<"\tposition: (" << node.position.x << "," << node.position.y << ")," << std::endl;
+    std::cout <<"\tparent: (" << node.parent.x << "," << node.parent.y << ")," << std::endl;
+    std::cout <<"\tg=" << node.g << ", h=" << node.h << ", f=" << node.f << std::endl;
+    std::cout << "}" << std::endl;
 }

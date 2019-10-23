@@ -82,9 +82,6 @@ void Fish::destroy()
 void Fish::update(float ms, EntityGrid* aiGrid)
 {
 	m_path = aiGrid->getPath(*this);
-	for (auto point : m_path) {
-		std::cout << "(" << point.x << "," << point.y << ")" << std::endl;
-	}
 	// Move fish along -X based on how much time has passed, this is to (partially) avoid
 	// having entities move at different speed based on the machine.
 	float step = -1.0 * motion.speed * (ms / 1000);

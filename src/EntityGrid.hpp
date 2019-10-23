@@ -53,6 +53,7 @@ private:
     int gridH;
     int size;
     std::vector<Vertex> m_vertices;
+    void printNode(Node node);
 };
 
 
