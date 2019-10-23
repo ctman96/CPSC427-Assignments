@@ -399,6 +399,8 @@ std::vector<vec2> EntityGrid::getPath(const Fish& fish) {
                     vec2 pos = {
                             (float) (map[px][py].position.x * size),
                             (float) (map[px][py].position.y * size),
+                            // TODO maybe instead give directions (U/D/L/R) ?
+                            // TODO or somehow normalize this to match fish location
                     };
                     path.emplace_back(pos);
                     if (DEBUG_LOG)std::cout << "(" << pos.x <<","<< pos.y<<")" << ", ";
