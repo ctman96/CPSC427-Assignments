@@ -9,6 +9,7 @@
 #include "bullet.hpp"
 #include "pebbles.hpp"
 #include "debug/DebugView.hpp"
+#include "EntityGrid.hpp"
 
 // stlib
 #include <vector>
@@ -19,10 +20,14 @@
 #include <SDL_mixer.h>
 #include <map>
 
+class DebugView;
+
 // Container for all our entities and game logic. Individual rendering / update is 
 // deferred to the relative update() methods
 class World
 {
+	friend class DebugView;
+	friend class EntityGrid;
 public:
 	World();
 	~World();
@@ -98,6 +103,7 @@ private:
 	std::default_random_engine m_rng;
 	std::uniform_real_distribution<float> m_dist; // default 0..1
 
+	EntityGrid aiGrid;
 	bool m_debug;
     DebugView m_debug_view;
 

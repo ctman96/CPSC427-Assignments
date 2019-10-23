@@ -130,7 +130,7 @@ bool World::init(vec2 screen)
 	m_current_speed = 1.f;
 	m_debug = false;
 
-	return m_salmon.init() && m_water.init() && m_pebbles_emitter.init() && m_debug_view.init(screen);
+	return m_salmon.init() && m_water.init() && m_pebbles_emitter.init() && m_debug_view.init(screen) && aiGrid.init(screen.x, screen.y, 32);
 }
 
 // Releases all the associated resources
@@ -396,6 +396,8 @@ void World::draw()
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 	// Drawing entities
+	if (m_debug)
+		aiGrid.draw(projection_2D);
 	for (auto& turtle : m_turtles)
 		turtle.draw(projection_2D);
 	for (auto& fish : m_fish)

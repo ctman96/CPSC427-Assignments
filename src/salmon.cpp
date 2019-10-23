@@ -133,45 +133,7 @@ void Salmon::update(float ms, std::map<int, bool> &keyMap, vec2 mouse_position, 
 
         accelerate(accelX,accelY);
 
-		float bufX = screen.x * 0.95f;
-		float bufY = screen.y * 0.95f;
-
-		vec2 tl = { screen.x - bufX, screen.y - bufY };
-		vec2 br = { bufX, bufY };
-
-		transform.begin();
-		transform.translate({motion.position.x, motion.position.y });
-		transform.scale(physics.scale);
-		transform.rotate(motion.radians - 3.14f/2);
-		transform.end();
-
-		bool flipX = false;
-		bool flipY = false;
-        for(auto vertex : m_vertices) {
-            vec3 pos = mul(transform.out, vec3{vertex.position.x, vertex.position.y, 1.0});
-            bool collision = false;
-            if ((m_velocity.x < 0 && pos.x <= tl.x) || (m_velocity.x > 0 && pos.x >= br.x)) {
-                flipX = true;
-                collision = true;
-            }
-            if ((m_velocity.y < 0 && pos.y <= tl.y) || (m_velocity.y > 0 && pos.y >= br.y)) {
-                flipY = true;
-                collision = true;
-            }
-            if (collision)
-                m_debug_collision_points.emplace_back(vec2{pos.x, pos.y});
-        }
-        if (flipX) {
-            std::cout << "flipx" << std::endl;
-            m_velocity.x = -m_velocity.x;
-        }
-        if (flipY) {
-            std::cout << "flipy" <<std::endl;
-            m_velocity.y = -m_velocity.y;
-        }
-        if (flipX || flipY){
-			m_update_rotation = true;
-        } else {
+		if (!check_wall_collisions(screen)){
 			// move based on velocity
 			motion.position.x += m_velocity.x;
 			motion.position.y += m_velocity.y;
@@ -192,6 +154,16 @@ void Salmon::update(float ms, std::map<int, bool> &keyMap, vec2 mouse_position, 
 	}
 	else
 	{
+	transform.begin();
+	transform.translate({motion.position.x, motion.position.y });
+	transform.scale(physics.scale);
+	transform.rotate(motion.radians - 3.14f/2);
+	transform.end();
+	m_debug_vertices.clear();
+	for(auto vertex : m_vertices) {
+		vec3 pos = mul(transform.out, vec3{vertex.position.x, vertex.position.y, 1.0});
+		m_debug_vertices.emplace_back(vec2{pos.x, pos.y});
+	}
 		// If dead we make it face upwards and sink deep down
 		set_rotation(3.1415f);
 		move({ 0.f, step });
@@ -199,6 +171,55 @@ void Salmon::update(float ms, std::map<int, bool> &keyMap, vec2 mouse_position, 
 
 	if (m_light_up_countdown_ms > 0.f)
 		m_light_up_countdown_ms -= ms;
+}
+
+
+bool Salmon::check_wall_collisions(vec2 screen) {
+
+
+	// TODO bounding box check first for efficiency
+
+
+    float bufX = screen.x * 0.95f;
+    float bufY = screen.y * 0.95f;
+
+    vec2 tl = { screen.x - bufX, screen.y - bufY };
+    vec2 br = { bufX, bufY };
+
+    transform.begin();
+    transform.translate({motion.position.x, motion.position.y });
+    transform.scale(physics.scale);
+    transform.rotate(motion.radians - 3.14f/2);
+    transform.end();
+
+    bool flipX = false;
+    bool flipY = false;
+    m_debug_vertices.clear();
+    for(auto vertex : m_vertices) {
+        vec3 pos = mul(transform.out, vec3{vertex.position.x, vertex.position.y, 1.0});
+        bool collision = false;
+        if ((m_velocity.x < 0 && pos.x <= tl.x) || (m_velocity.x > 0 && pos.x >= br.x)) {
+            flipX = true;
+            collision = true;
+        }
+        if ((m_velocity.y < 0 && pos.y <= tl.y) || (m_velocity.y > 0 && pos.y >= br.y)) {
+            flipY = true;
+            collision = true;
+        }
+        if (collision)
+            m_debug_collision_points.emplace_back(vec2{pos.x, pos.y});
+        m_debug_vertices.emplace_back(vec2{pos.x, pos.y});
+    }
+    if (flipX) {
+        m_velocity.x = -m_velocity.x;
+    }
+    if (flipY) {
+        m_velocity.y = -m_velocity.y;
+    }
+    if (flipX || flipY) {
+		m_update_rotation = true;
+	}
+    return false;
 }
 
 void Salmon::draw(const mat3& projection)
@@ -404,3 +425,8 @@ void Salmon::clear_debug_collision() {
 const std::vector<vec2> &Salmon::getM_debug_collision_points() const {
 	return m_debug_collision_points;
 }
+
+const std::vector<vec2> &Salmon::getM_debug_vertices() const {
+	return m_debug_vertices;
+}
+

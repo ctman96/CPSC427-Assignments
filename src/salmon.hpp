@@ -66,6 +66,12 @@ private:
 	mat3 m_projection;
 
 	std::vector<vec2> m_debug_collision_points;
+	std::vector<vec2> m_debug_vertices;
+public:
+    const std::vector<vec2> &getM_debug_vertices() const;
 
-	bool collides_with_exact(int left, int right, int top, int bottom);
+private:
+
+    bool collides_with_exact(int left, int right, int top, int bottom);
+	bool check_wall_collisions(vec2 screen);
 };
