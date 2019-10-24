@@ -290,19 +290,41 @@ void EntityGrid::draw(const mat3 &projection, int index, EType type) {
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, nullptr);
 }
 
-std::vector<vec2> EntityGrid::getPath(const Fish& fish) {
-    //TODO pre-check if at destination;
 
+bool isDestFish(const std::vector<std::vector<EType>> egrid, int x, int y) {
+    return x == 0;
+}
+std::vector<vec2> EntityGrid::getPath(const Fish& fish) {
     bool DEBUG_LOG =false;
 
     vec2 fpos = fish.get_position();
     vec2 fbox = fish.get_bounding_box();
 
+    return search(fpos, fbox, {EType::player}, &isDestFish);
+}
 
-    float wr = fbox.x/2;
-    float hr = fbox.y/2;
-    vec2 tl = {fpos.x-wr, fpos.y-hr};
-    vec2 br = {fpos.x+wr, fpos.y+hr};
+std::vector<vec2> EntityGrid::getPath(const Turtle &turtle, const Salmon &salmon) {
+    // TODO
+    return std::vector<vec2>();
+}
+
+void EntityGrid::printNode(Node node) {
+    std::cout << "Node { " << std::endl;
+    std::cout <<"\tposition: (" << node.position.x << "," << node.position.y << ")," << std::endl;
+    std::cout <<"\tparent: (" << node.parent.x << "," << node.parent.y << ")," << std::endl;
+    std::cout <<"\tg=" << node.g << ", h=" << node.h << ", f=" << node.f << std::endl;
+    std::cout << "}" << std::endl;
+}
+
+bool EntityGrid::isValid(int x, int y) {
+    return !(x < 0 || x >= gridW || y < 0 || y >= gridH);
+}
+
+std::vector<vec2> EntityGrid::search(vec2 position, vec2 bbox, const std::vector<EType> avoid, isDestinationFn isDest, bool DEBUG_LOG) {
+    float wr = bbox.x/2;
+    float hr = bbox.y/2;
+    vec2 tl = {position.x-wr, position.y-hr};
+    vec2 br = {position.x+wr, position.y+hr};
 
     auto l = bound((int)std::floor(tl.x / (float)size), 0, gridW);
     auto r = bound((int)std::ceil(br.x / (float)size), l, gridW);
@@ -312,14 +334,11 @@ std::vector<vec2> EntityGrid::getPath(const Fish& fish) {
     auto w = r - l;
     auto h = b - t;
 
+    auto fx = (int)std::floor((position.x) / (float)size);
+    auto fy = (int)std::floor((position.y) / (float)size);
 
-    // TODO refactor this all out into its own function to use for other entities
-
-    auto fx = (int)std::floor((fpos.x) / (float)size);
-    auto fy = (int)std::floor((fpos.y) / (float)size);
-
-    auto offsetX = fpos.x - (size * fx);
-    auto offsetY = fpos.y - (size * fy);
+    auto offsetX = position.x - (size * fx);
+    auto offsetY = position.y - (size * fy);
 
     // std::cout << "("<<fpos.x<<","<<fpos.y<<")" << "("<<fx<<","<<fy<<")"  << "("<<offsetX<<","<<offsetY<<")"  << std::endl;
 
@@ -342,12 +361,12 @@ std::vector<vec2> EntityGrid::getPath(const Fish& fish) {
 
     // std::cout << "("<<l<<","<<t<<")" << "("<<r<<","<<b<<")"  << "("<<fx<<","<<fy<<")"  << std::endl;
 
-    if (!isValid(fx, fy)) {
+    if (!isValid(fx, fy) || isDest(grid, fx, fy)) {
         return std::vector<vec2>();
     }
 
     // Set starting node
-    int x = fx; // TODO??
+    int x = fx;
     int y = fy;
     map[x][y].f = 0.0;
     map[x][y].g = 0.0;
@@ -399,7 +418,6 @@ std::vector<vec2> EntityGrid::getPath(const Fish& fish) {
             if (!isValid(adjX, adjY)) {
                 if (DEBUG_LOG)std::cout << "Node (" << adjX <<","<< adjY << ") not valid, ignoring" << std::endl;
                 continue;
-
             }
 
             // Check for clearance
@@ -410,10 +428,11 @@ std::vector<vec2> EntityGrid::getPath(const Fish& fish) {
             int clearBoundB = std::min((adjY + (int)std::ceil(h/2) + 1), gridH);
             for (int clearX = clearBoundL; clearX < clearBoundR; clearX++) {
                 for (int clearY = clearBoundT; clearY < clearBoundB; clearY++) {
-                    // TODO abstract out to check against vector of types argument to ignore
-                    if (grid[clearX][clearY] == EType::player) {
-                        if (DEBUG_LOG) std::cout << "Node (" << clearX << "," << clearY << ") is player" << std::endl;
-                        clear = false;
+                    for (auto type : avoid) {
+                        if (grid[clearX][clearY] == type) {
+                            if (DEBUG_LOG) std::cout << "Node (" << clearX << "," << clearY << ") is avoided type" << std::endl;
+                            clear = false;
+                        }
                     }
                 }
             }
@@ -424,7 +443,7 @@ std::vector<vec2> EntityGrid::getPath(const Fish& fish) {
             }
 
             // Check for destination (left edge of map / x = 0)
-            if (adjX == 0) {
+            if (isDest(grid, adjX, adjY)) {
                 if (DEBUG_LOG)std::cout << "Node (" << adjX <<","<< adjY << ") is destination" << std::endl;
                 map[adjX][adjY].parent = node.position;
                 std::vector<vec2> path;
@@ -492,16 +511,4 @@ std::vector<vec2> EntityGrid::getPath(const Fish& fish) {
     if (DEBUG_LOG)std::cout << "=========================" << std::endl;
 
     return std::vector<vec2>();
-}
-
-void EntityGrid::printNode(Node node) {
-    std::cout << "Node { " << std::endl;
-    std::cout <<"\tposition: (" << node.position.x << "," << node.position.y << ")," << std::endl;
-    std::cout <<"\tparent: (" << node.parent.x << "," << node.parent.y << ")," << std::endl;
-    std::cout <<"\tg=" << node.g << ", h=" << node.h << ", f=" << node.f << std::endl;
-    std::cout << "}" << std::endl;
-}
-
-bool EntityGrid::isValid(int x, int y) {
-    return !(x < 0 || x >= gridW || y < 0 || y >= gridH);
 }

@@ -51,6 +51,11 @@ set(SOURCE_FILES
     src/bullet.cpp
     src/bullet.hpp src/debugging/DebugView.cpp src/debugging/DebugView.hpp src/debugging/DebugDot.cpp src/debugging/DebugDot.hpp src/debugging/DebugCollision.cpp src/debugging/DebugCollision.hpp src/debugging/DebugScreenBoundary.cpp src/debugging/DebugScreenBoundary.hpp src/EntityGrid.cpp src/EntityGrid.hpp)
 
+if (IS_OS_MAC)
+    include_directories(/usr/local/include)
+    link_directories(/usr/local/lib)
+endif()
+
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 target_include_directories(${PROJECT_NAME} PUBLIC src/)
 

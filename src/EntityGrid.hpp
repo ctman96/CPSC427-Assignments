@@ -36,6 +36,8 @@ struct Node {
     }
 };
 
+typedef bool isDestinationFn(const std::vector<std::vector<EType>> grid, int x, int y);
+
 class EntityGrid : public Entity{
 public:
     bool init(int width, int height, int size);
@@ -47,6 +49,7 @@ public:
     void draw(const mat3 &projection) override;
     void draw(const mat3 &projection, int index, EType type);
     std::vector<vec2> getPath(const Fish& fish);
+    std::vector<vec2> getPath(const Turtle& turtle, const Salmon& salmon);
 private:
     std::vector<std::vector<EType>> grid;
     int gridW;
@@ -55,6 +58,7 @@ private:
     std::vector<Vertex> m_vertices;
     void printNode(Node node);
     bool isValid(int x, int y);
+    std::vector<vec2> search(vec2 position, vec2 bbox, const std::vector<EType> avoid, isDestinationFn destFn, bool DEBUG_LOG=false);
 };
 
 
