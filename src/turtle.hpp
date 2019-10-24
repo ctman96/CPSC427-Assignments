@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common.hpp"
+#include "EntityGrid.hpp"
 
 // Salmon enemy 
 class Turtle : public Entity
@@ -17,7 +18,7 @@ public:
 
 	// Update turtle due to current
 	// ms represents the number of milliseconds elapsed from the previous update() call
-	void update(float ms);
+	void update(float ms, std::vector<vec2> newPath);
 
 	// Renders the salmon
 	// projection is the 2D orthographic projection matrix
@@ -31,4 +32,9 @@ public:
 
 	// Returns the turtle' bounding box for collision detection, called by collides_with()
 	vec2 get_bounding_box() const;
+
+    const std::vector<vec2> &getMPath() const;
+
+private:
+    std::vector<vec2> m_path;
 };

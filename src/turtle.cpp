@@ -78,12 +78,39 @@ void Turtle::destroy()
 	glDeleteShader(effect.program);
 }
 
-void Turtle::update(float ms)
+void Turtle::update(float ms, std::vector<vec2> newPath)
 {
-	// Move fish along -X based on how much time has passed, this is to (partially) avoid
-	// having entities move at different speed based on the machine.
-	float step = -1.0 * motion.speed * (ms / 1000);
-	motion.position.x += step;
+    float step = motion.speed * (ms / 1000);
+
+    // Get path
+    if (!newPath.empty()) {
+        m_path = newPath;
+    }
+
+
+    if (!m_path.empty() && m_path.back().x > 32.f) {
+        vec2 dest = m_path.back();
+
+        float xdif = dest.x - motion.position.x;
+        float ydif = dest.y - motion.position.y;
+        /*
+		float rad = atan2(xdif, ydif);
+		float dx = step*sin(rad);
+		float dy = step*cos(rad);
+        motion.position.x += dx;
+        motion.position.y += dy;
+         */
+
+        if (std::abs(xdif) >= 1) {
+            motion.position.x += (xdif > 0) ? step : -1*step;
+        } else if (std::abs(ydif) >= 1) {
+            motion.position.y += (ydif > 0) ? step : -1*step;
+        } else {
+            motion.position.x += -1 * step;
+        }
+    } else {
+        motion.position.x += -1 * step;
+    }
 }
 
 void Turtle::draw(const mat3& projection)
@@ -150,4 +177,8 @@ vec2 Turtle::get_bounding_box() const
 	// Returns the local bounding coordinates scaled by the current size of the turtle 
 	// fabs is to avoid negative scale due to the facing direction.
 	return { std::fabs(physics.scale.x) * turtle_texture.width, std::fabs(physics.scale.y) * turtle_texture.height };
+}
+
+const std::vector<vec2> &Turtle::getMPath() const {
+    return m_path;
 }

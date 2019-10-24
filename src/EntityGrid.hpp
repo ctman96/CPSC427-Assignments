@@ -36,7 +36,8 @@ struct Node {
     }
 };
 
-typedef bool isDestinationFn(const std::vector<std::vector<EType>> grid, int x, int y);
+typedef bool isDestinationFn(const std::vector<std::vector<EType>>& grid, pair pos, pair dest);
+typedef float heuristicFn(const std::vector<std::vector<EType>>& grid, pair pos, pair dest); // TODO heuristifc function
 
 class EntityGrid : public Entity{
 public:
@@ -56,9 +57,9 @@ private:
     int gridH;
     int size;
     std::vector<Vertex> m_vertices;
-    void printNode(Node node);
+    static void printNode(Node node);
     bool isValid(int x, int y);
-    std::vector<vec2> search(vec2 position, vec2 bbox, const std::vector<EType> avoid, isDestinationFn destFn, bool DEBUG_LOG=false);
+    std::vector<vec2> search(vec2 position, vec2 bbox, const std::vector<EType> avoid, isDestinationFn destFn, heuristicFn h,  pair dest={-1,-1}, bool DEBUG_LOG=false);
 };
 
 

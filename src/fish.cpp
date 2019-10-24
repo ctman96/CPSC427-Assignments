@@ -89,13 +89,6 @@ void Fish::update(float ms, EntityGrid* aiGrid)
 		m_path = newPath;
 	}
 
-	auto i = m_path.begin();
-	while (i != m_path.end()) {
-        //std::cout << "(" << (*i).x <<","<< (*i).y<<")" << ", ";
-        i++;
-	}
-    //std::cout << std::endl;
-
 
 	if (!m_path.empty() && m_path.back().x > 32.f) {
 		vec2 dest = m_path.back();

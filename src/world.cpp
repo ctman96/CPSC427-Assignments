@@ -245,8 +245,9 @@ bool World::update(float elapsed_ms)
 	// Updating all entities, making the turtle and fish
 	// faster based on current
 	m_salmon.update(elapsed_ms, keyMap, mouse_position, screen);
-	for (auto& turtle : m_turtles)
-		turtle.update(elapsed_ms * m_current_speed);
+	for (auto& turtle : m_turtles) {
+        turtle.update(elapsed_ms * m_current_speed, aiGrid.getPath(turtle, m_salmon));
+	}
 	for (auto& fish : m_fish)
 		fish.update(elapsed_ms * m_current_speed, &aiGrid);
 	for (auto& bullet : m_bullets)

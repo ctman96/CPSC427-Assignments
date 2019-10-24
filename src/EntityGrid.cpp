@@ -291,8 +291,11 @@ void EntityGrid::draw(const mat3 &projection, int index, EType type) {
 }
 
 
-bool isDestFish(const std::vector<std::vector<EType>> egrid, int x, int y) {
-    return x == 0;
+bool isDestFish(const std::vector<std::vector<EType>>& egrid, pair pos, pair dest) {
+    return pos.x == 0;
+}
+float fishH(const std::vector<std::vector<EType>>& grid, pair pos, pair dest) {
+    return std::abs(pos.x);
 }
 std::vector<vec2> EntityGrid::getPath(const Fish& fish) {
     bool DEBUG_LOG =false;
@@ -300,12 +303,30 @@ std::vector<vec2> EntityGrid::getPath(const Fish& fish) {
     vec2 fpos = fish.get_position();
     vec2 fbox = fish.get_bounding_box();
 
-    return search(fpos, fbox, {EType::player}, &isDestFish);
+    // TODO heuristifc function - x position (distance to end of screen)
+
+    return search(fpos, fbox, {EType::player}, &isDestFish, &fishH);
 }
 
+bool isDestTurtle(const std::vector<std::vector<EType>>& grid, pair pos, pair dest) {
+    return pos.x == dest.x && pos.y == dest.y;
+}
+float turtleH(const std::vector<std::vector<EType>>& grid, pair pos, pair dest) {
+    // TODO - Distance to player
+    return 0;
+}
 std::vector<vec2> EntityGrid::getPath(const Turtle &turtle, const Salmon &salmon) {
     // TODO
-    return std::vector<vec2>();
+    vec2 tpos = turtle.get_position();
+    vec2 tbox = turtle.get_bounding_box();
+
+    vec2 spos = turtle.get_position();
+    auto sx = (int)std::floor((spos.x) / (float)size);
+    auto sy = (int)std::floor((spos.y) / (float)size);
+    pair s = { sx, sy };
+
+    // TODO heuristifc function - Distance to player
+    return search(tpos, tbox, {}, &isDestTurtle, &turtleH, s);
 }
 
 void EntityGrid::printNode(Node node) {
@@ -320,7 +341,8 @@ bool EntityGrid::isValid(int x, int y) {
     return !(x < 0 || x >= gridW || y < 0 || y >= gridH);
 }
 
-std::vector<vec2> EntityGrid::search(vec2 position, vec2 bbox, const std::vector<EType> avoid, isDestinationFn isDest, bool DEBUG_LOG) {
+// TODO heuristifc function
+std::vector<vec2> EntityGrid::search(vec2 position, vec2 bbox, const std::vector<EType> avoid, isDestinationFn isDest, heuristicFn hfn, pair dest, bool DEBUG_LOG) {
     float wr = bbox.x/2;
     float hr = bbox.y/2;
     vec2 tl = {position.x-wr, position.y-hr};
@@ -361,7 +383,7 @@ std::vector<vec2> EntityGrid::search(vec2 position, vec2 bbox, const std::vector
 
     // std::cout << "("<<l<<","<<t<<")" << "("<<r<<","<<b<<")"  << "("<<fx<<","<<fy<<")"  << std::endl;
 
-    if (!isValid(fx, fy) || isDest(grid, fx, fy)) {
+    if (!isValid(fx, fy) || isDest(grid, {fx, fy}, dest)) {
         return std::vector<vec2>();
     }
 
@@ -443,7 +465,7 @@ std::vector<vec2> EntityGrid::search(vec2 position, vec2 bbox, const std::vector
             }
 
             // Check for destination (left edge of map / x = 0)
-            if (isDest(grid, adjX, adjY)) {
+            if (isDest(grid, {adjX, adjY}, dest)) {
                 if (DEBUG_LOG)std::cout << "Node (" << adjX <<","<< adjY << ") is destination" << std::endl;
                 map[adjX][adjY].parent = node.position;
                 std::vector<vec2> path;
@@ -479,7 +501,7 @@ std::vector<vec2> EntityGrid::search(vec2 position, vec2 bbox, const std::vector
 
                 // Calculate new F value
                 float newG = node.g + 1.f; // Since we're only moving in cardinal directions, just increment G
-                float newH = std::abs(adjX); // heuristic = straight line distance to the edge of map, admissible
+                float newH = hfn(grid, {adjX, adjY}, {-1,-1}); // heuristic = straight line distance to the edge of map, admissible // TODO generalize heuristic function
                 float newF = newG + newH;
 
 
