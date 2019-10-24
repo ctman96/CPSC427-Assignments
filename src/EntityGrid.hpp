@@ -32,7 +32,7 @@ struct Node {
     float h;
     bool operator < (const Node& r) const
     {
-        return f < r.f && position.x == r.position.x && position.y == r.position.y;
+        return f < r.f;
     }
 };
 

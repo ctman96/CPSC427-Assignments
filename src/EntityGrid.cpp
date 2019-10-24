@@ -354,47 +354,54 @@ std::vector<vec2> EntityGrid::getPath(const Fish& fish) {
     map[x][y].h = 0.0;
     map[x][y].parent = {x,y};
 
-    std::set<Node> open;
-    open.emplace(map[x][y]);
+    std::vector<Node> open;
+    open.emplace_back(map[x][y]);
     int debugopencount = 1;
 
-    if (DEBUG_LOG)std::cout << std::endl;
-    if (DEBUG_LOG)std::cout << "=========================" << std::endl;
-    if (DEBUG_LOG)std::cout << "startSearch" << std::endl;
-    if (DEBUG_LOG)std::cout << std::endl;
+    if (DEBUG_LOG)std::cout << std::endl << "=========================" << std::endl << "startSearch" << std::endl << std::endl;
 
     int iterN = 0;
     do {
-        if (DEBUG_LOG)std::cout << std::endl;
-        if (DEBUG_LOG)std::cout << "ITERATION START: " << iterN << std::endl;
-        if (DEBUG_LOG)std::cout << std::endl;
-        if (DEBUG_LOG)std::cout << "open (" << open.size() << "):" << debugopencount << std::endl;
-        // Get and remove lowest f score node from open
-        Node node = *open.begin();
+        if (DEBUG_LOG)std::cout << std::endl << "ITERATION START: " << iterN << std::endl;
+        if (DEBUG_LOG)std::cout << std::endl << "open (" << open.size() << "):" << debugopencount << std::endl;
+
+        // Get node with lowest f value from open
+        Node node;
+        float tmp = MAX;
+        std::vector<Node>::iterator nodeIt;
+        for (auto it = open.begin(); it != open.end(); it++) {
+            if ((*it).f < tmp) {
+                tmp = (*it).f;
+                nodeIt = it;
+            }
+        }
+        node = (*nodeIt);
         int curX = node.position.x;
         int curY = node.position.y;
-        for (auto node : open) {
-            if (DEBUG_LOG)printNode(node);
-        }
-        open.erase(open.begin());
+
+        if (DEBUG_LOG) {for (auto n : open) printNode(n);}
+        if (DEBUG_LOG)std::cout << std::endl << "getLowest:" << std::endl;
+
+        // Remove the node from open
+        open.erase(nodeIt);
         debugopencount--;
-        if (DEBUG_LOG)std::cout << std::endl;
-        if (DEBUG_LOG)std::cout << "getLowest:" << std::endl;
-        if (DEBUG_LOG) printNode(node);
+
         // Add to closed
         closed[node.position.x][node.position.y] = true;
 
-        // Get adjacent
+        // Check the node's four adjacent squares (W,N,E,S)
         pair adjacent[4] = {{curX-1,curY}, {curX,curY-1}, {curX+1, curY}, {curX, curY+1}};
         for (auto n : adjacent) {
             int adjX = n.x;
             int adjY = n.y;
-            // ignore invalid
+
+            // Ignore if position is invalid
             if (!isValid(adjX, adjY)) {
                 if (DEBUG_LOG)std::cout << "Node (" << adjX <<","<< adjY << ") not valid, ignoring" << std::endl;
                 continue;
 
             }
+
             // Check for clearance
             bool clear = true;
             int clearBoundL = std::max((adjX - (int)std::floor(w/2)), 0);
@@ -410,12 +417,13 @@ std::vector<vec2> EntityGrid::getPath(const Fish& fish) {
                     }
                 }
             }
+
             if (!clear){
                 if (DEBUG_LOG) std::cout << "Ignoring" << std::endl;
                 continue;
             }
 
-            // Check for destination (left edge of map)
+            // Check for destination (left edge of map / x = 0)
             if (adjX == 0) {
                 if (DEBUG_LOG)std::cout << "Node (" << adjX <<","<< adjY << ") is destination" << std::endl;
                 map[adjX][adjY].parent = node.position;
@@ -423,15 +431,15 @@ std::vector<vec2> EntityGrid::getPath(const Fish& fish) {
 
                 int px = adjX;
                 int py = adjY;
-                // Create path
+
+                // Create path by following nodes' parents back to the start node
                 if (DEBUG_LOG) std::cout << "Generating path: " << std::endl;
                 while (!(map[px][py].parent.x == px && map[px][py].parent.y == py)
                        && map[px][py].position.x != -1 && map[px][py].position.y != -1) {
                     vec2 pos = {
-                            (float) (map[px][py].position.x * size + offsetX),
-                            (float) (map[px][py].position.y * size + offsetY),
-                            // TODO maybe instead give directions (U/D/L/R) ?
-                            // TODO or somehow normalize this to match fish location
+                            // Return path offset to the entity's actual position
+                            (map[px][py].position.x * size + offsetX),
+                            (map[px][py].position.y * size + offsetY),
                     };
                     path.emplace_back(pos);
                     if (DEBUG_LOG)std::cout << "(" << pos.x <<","<< pos.y<<")" << ", ";
@@ -440,44 +448,34 @@ std::vector<vec2> EntityGrid::getPath(const Fish& fish) {
                     px = temp.x;
                     py = temp.y;
                 }
-                // Ignore start node
-                /*vec2 pos = {
-                        (float) (map[px][py].position.x * size) + (size / 2.f),
-                        (float) (map[px][py].position.y * size) + (size / 2.f),
-                };
-                path.emplace_back(pos);
-                if (DEBUG_LOG)std::cout << "(" << pos.x <<","<< pos.y<<")" << std::endl;
-                 */
+                // Note: Ignoring start node
 
-                if (DEBUG_LOG)std::cout << std::endl;
-                if (DEBUG_LOG)std::cout << "successSearch" << std::endl;
-                if (DEBUG_LOG)std::cout << std::endl;
-                if (DEBUG_LOG)std::cout << "=========================" << std::endl;
+                if (DEBUG_LOG)std::cout << std::endl << "Successful Search" << std::endl << std::endl<< "=========================" << std::endl;
                 return path;
             }
 
             // check if not already closed
             if (!closed[adjX][adjY]){
                 if (DEBUG_LOG)std::cout << "Node (" << adjX <<","<< adjY << ") is not closed, checking path" << std::endl;
-                // calculate values
-                float newG = node.g + 1.f;
-                float newH = std::abs(adjX); // heuristic = straight line distance to the edge of map
+
+                // Calculate new F value
+                float newG = node.g + 1.f; // Since we're only moving in cardinal directions, just increment G
+                float newH = std::abs(adjX); // heuristic = straight line distance to the edge of map, admissible
                 float newF = newG + newH;
 
 
                 if (DEBUG_LOG)std::cout << "new(f="<<newF<<",g="<<newG<<",h="<<newH<<"), old(f="<<map[adjX][adjY].f<<",g="<<map[adjX][adjY].g<<",h="<<map[adjX][adjY].h<<")"<< std::endl;
 
-                // Only update if better path
+                // If it is a new node or has a better f value, update values and add to frontier
                 if (map[adjX][adjY].f == MAX || map[adjX][adjY].f > newF) {
                     map[adjX][adjY].parent = node.position;
                     map[adjX][adjY].f = newF;
                     map[adjX][adjY].g = newG;
                     map[adjX][adjY].h = newH;
-                    if (DEBUG_LOG)std::cout << "Contains? "<< open.count(map[adjX][adjY]) << std::endl;
-                    open.emplace(map[adjX][adjY]); // TODO nodes not being added to open properly
+                    open.emplace_back(map[adjX][adjY]);
                     debugopencount++;
                     if (DEBUG_LOG)std::cout << "Added node to open: " << std::endl;
-                    if (DEBUG_LOG)printNode(map[adjX][adjY]);
+                    if (DEBUG_LOG) printNode(map[adjX][adjY]);
                 } else {
                     if (DEBUG_LOG)std::cout << "Path not better" << std::endl;
                 }
@@ -486,11 +484,10 @@ std::vector<vec2> EntityGrid::getPath(const Fish& fish) {
             }
         }
         iterN++;
-        // TODO debug print grid of f values/closed
     } while (!open.empty());
 
     if (DEBUG_LOG)std::cout << std::endl;
-    std::cout << "failedSearch" << std::endl;
+    if (DEBUG_LOG)std::cout << "Failed Search" << std::endl;
     if (DEBUG_LOG)std::cout << std::endl;
     if (DEBUG_LOG)std::cout << "=========================" << std::endl;
 
