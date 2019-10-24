@@ -78,6 +78,7 @@ void DebugCollision::draw(const mat3 &projection, vec2 pos, bool col) {
     // Incrementally updates transformation matrix, thus ORDER IS IMPORTANT
     transform.begin();
     transform.translate(pos);
+    transform.rotate(0);
     transform.scale(physics.scale);
     transform.end();
 

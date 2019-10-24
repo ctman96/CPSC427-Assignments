@@ -94,17 +94,19 @@ void Fish::update(float ms, EntityGrid* aiGrid)
 		vec2 dest = *m_path.end();
 		// Move fish along -X based on how much time has passed, this is to (partially) avoid
 		// having entities move at different speed based on the machine.
-		//float rad = atan2(dest.x - motion.position.x, dest.y - motion.position.y);
-		//float dx = step*sin(rad);
-		//float dy = step*cos(rad);
-		float xdif=dest.x - motion.position.x;
+		float rad = atan2(dest.x - motion.position.x, dest.y - motion.position.y);
+		float dx = step*sin(rad);
+		float dy = step*cos(rad);
+        motion.position.x += dx;
+        motion.position.y += dy;
+		/*float xdif=dest.x - motion.position.x;
 		float ydif=dest.y - motion.position.y;
 		if (std::abs(xdif) > 32) {
 			motion.position.x += (xdif > 0) ? step : -1*step;
 		}
 		if (std::abs(ydif) > 32) {
 			motion.position.y += (ydif > 0) ? step : -1*step;
-		}
+		}*/
 	} else {
 		motion.position.x += -1 * step;
 	}

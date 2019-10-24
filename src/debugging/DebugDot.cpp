@@ -2,6 +2,7 @@
 // Created by Cody on 10/22/2019.
 //
 
+#include <iostream>
 #include "DebugDot.hpp"
 
 Texture DebugDot::dot_texture;
@@ -78,8 +79,10 @@ void DebugDot::draw(const mat3 &projection, vec2 pos) {
     // Incrementally updates transformation matrix, thus ORDER IS IMPORTANT
     transform.begin();
     transform.translate(pos);
+    transform.rotate(0);
     transform.scale(physics.scale);
     transform.end();
+    //std::cout<<pos.x <<","<<pos.y<<std::endl;
 
     // Setting shaders
     glUseProgram(effect.program);
