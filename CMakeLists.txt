@@ -49,7 +49,7 @@ set(SOURCE_FILES
 	src/world.hpp
   src/pebbles.hpp
     src/bullet.cpp
-    src/bullet.hpp src/debug/DebugView.cpp src/debug/DebugView.hpp src/debug/DebugDot.cpp src/debug/DebugDot.hpp src/debug/DebugCollision.cpp src/debug/DebugCollision.hpp src/debug/DebugScreenBoundary.cpp src/debug/DebugScreenBoundary.hpp src/EntityGrid.cpp src/EntityGrid.hpp)
+    src/bullet.hpp src/debugging/DebugView.cpp src/debugging/DebugView.hpp src/debugging/DebugDot.cpp src/debugging/DebugDot.hpp src/debugging/DebugCollision.cpp src/debugging/DebugCollision.hpp src/debugging/DebugScreenBoundary.cpp src/debugging/DebugScreenBoundary.hpp src/EntityGrid.cpp src/EntityGrid.hpp)
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 target_include_directories(${PROJECT_NAME} PUBLIC src/)

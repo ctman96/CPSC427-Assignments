@@ -8,7 +8,7 @@
 #include "water.hpp"
 #include "bullet.hpp"
 #include "pebbles.hpp"
-#include "debug/DebugView.hpp"
+#include "debugging/DebugView.hpp"
 #include "EntityGrid.hpp"
 
 // stlib
