@@ -89,25 +89,41 @@ void Fish::update(float ms, EntityGrid* aiGrid)
 		m_path = newPath;
 	}
 
+	auto i = m_path.begin();
+	while (i != m_path.end()) {
+        //std::cout << "(" << (*i).x <<","<< (*i).y<<")" << ", ";
+        i++;
+	}
+    //std::cout << std::endl;
 
-	if (!m_path.empty() && (*m_path.end()).x > 32.f) {
-		vec2 dest = *m_path.end();
-		// Move fish along -X based on how much time has passed, this is to (partially) avoid
-		// having entities move at different speed based on the machine.
-		float rad = atan2(dest.x - motion.position.x, dest.y - motion.position.y);
+
+	if (!m_path.empty() && m_path.back().x > 32.f) {
+		vec2 dest = m_path.back();
+
+        //std::cout << motion.position.x << "," << motion.position.y << " -> " << dest.x << "," <<  dest.y << std::endl;
+        float xdif=dest.x - motion.position.x;
+        float ydif=dest.y - motion.position.y;
+        //std::cout << xdif << "," << ydif << std::endl;
+        /*
+		float rad = atan2(xdif, ydif);
 		float dx = step*sin(rad);
 		float dy = step*cos(rad);
+        std::cout << "("<<motion.position.x<<","<<motion.position.y<<")" << "("<<dest.x<<","<<dest.y<<")"  << "("<<dx<<","<<dy<<")"  << std::endl;
         motion.position.x += dx;
         motion.position.y += dy;
-		/*float xdif=dest.x - motion.position.x;
-		float ydif=dest.y - motion.position.y;
-		if (std::abs(xdif) > 32) {
+         */
+
+		if (std::abs(xdif) >= 1) {
 			motion.position.x += (xdif > 0) ? step : -1*step;
-		}
-		if (std::abs(ydif) > 32) {
+		} else if (std::abs(ydif) >= 1) {
 			motion.position.y += (ydif > 0) ? step : -1*step;
-		}*/
+		} else {
+            //std::cout << "normal step" << std::endl;
+            motion.position.x += -1 * step;
+		}
+        //std::cout << motion.position.x << "," << motion.position.y << std::endl;
 	} else {
+        //std::cout << "normal step" << std::endl;
 		motion.position.x += -1 * step;
 	}
 

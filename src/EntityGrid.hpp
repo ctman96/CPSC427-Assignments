@@ -54,6 +54,7 @@ private:
     int size;
     std::vector<Vertex> m_vertices;
     void printNode(Node node);
+    bool isValid(int x, int y);
 };
 
 

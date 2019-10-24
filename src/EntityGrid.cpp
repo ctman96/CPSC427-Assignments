@@ -298,7 +298,7 @@ std::vector<vec2> EntityGrid::getPath(const Fish& fish) {
     vec2 fpos = fish.get_position();
     vec2 fbox = fish.get_bounding_box();
 
-    /*
+
     float wr = fbox.x/2;
     float hr = fbox.y/2;
     vec2 tl = {fpos.x-wr, fpos.y-hr};
@@ -311,9 +311,17 @@ std::vector<vec2> EntityGrid::getPath(const Fish& fish) {
 
     auto w = r - l;
     auto h = b - t;
-     */
-    auto fx = bound((int)std::floor((fpos.x - fbox.x/2) / (float)size), 0, gridW-1);
-    auto fy =  bound((int)std::floor((fpos.y) / (float)size), 0, gridH-1);
+
+
+    // TODO refactor this all out into its own function to use for other entities
+
+    auto fx = (int)std::floor((fpos.x) / (float)size);
+    auto fy = (int)std::floor((fpos.y) / (float)size);
+
+    auto offsetX = fpos.x - (size * fx);
+    auto offsetY = fpos.y - (size * fy);
+
+    // std::cout << "("<<fpos.x<<","<<fpos.y<<")" << "("<<fx<<","<<fy<<")"  << "("<<offsetX<<","<<offsetY<<")"  << std::endl;
 
     const float MAX = std::numeric_limits<float>::max();
 
@@ -330,6 +338,12 @@ std::vector<vec2> EntityGrid::getPath(const Fish& fish) {
             map[x][y].h = map[x][y].g;
             closed[x][y] = false;
         }
+    }
+
+    // std::cout << "("<<l<<","<<t<<")" << "("<<r<<","<<b<<")"  << "("<<fx<<","<<fy<<")"  << std::endl;
+
+    if (!isValid(fx, fy)) {
+        return std::vector<vec2>();
     }
 
     // Set starting node
@@ -376,11 +390,28 @@ std::vector<vec2> EntityGrid::getPath(const Fish& fish) {
             int adjX = n.x;
             int adjY = n.y;
             // ignore invalid
-            if (adjX < 0 || adjX >= gridW || adjY < 0 || adjY >= gridH ) {
+            if (!isValid(adjX, adjY)) {
                 if (DEBUG_LOG)std::cout << "Node (" << adjX <<","<< adjY << ") not valid, ignoring" << std::endl;
                 continue;
-            } else if (grid[adjX][adjY] == EType::player) {
-                if (DEBUG_LOG)std::cout << "Node (" << adjX <<","<< adjY << ") is player, ignoring" << std::endl;
+
+            }
+            // Check for clearance
+            bool clear = true;
+            int clearBoundL = std::max((adjX - (int)std::floor(w/2)), 0);
+            int clearBoundR = std::min((adjX + (int)std::ceil(w/2) + 1), gridW);
+            int clearBoundT = std::max((adjY - (int)std::floor(h/2)), 0);
+            int clearBoundB = std::min((adjY + (int)std::ceil(h/2) + 1), gridH);
+            for (int clearX = clearBoundL; clearX < clearBoundR; clearX++) {
+                for (int clearY = clearBoundT; clearY < clearBoundB; clearY++) {
+                    // TODO abstract out to check against vector of types argument to ignore
+                    if (grid[clearX][clearY] == EType::player) {
+                        if (DEBUG_LOG) std::cout << "Node (" << clearX << "," << clearY << ") is player" << std::endl;
+                        clear = false;
+                    }
+                }
+            }
+            if (!clear){
+                if (DEBUG_LOG) std::cout << "Ignoring" << std::endl;
                 continue;
             }
 
@@ -397,8 +428,8 @@ std::vector<vec2> EntityGrid::getPath(const Fish& fish) {
                 while (!(map[px][py].parent.x == px && map[px][py].parent.y == py)
                        && map[px][py].position.x != -1 && map[px][py].position.y != -1) {
                     vec2 pos = {
-                            (float) (map[px][py].position.x * size),
-                            (float) (map[px][py].position.y * size),
+                            (float) (map[px][py].position.x * size + offsetX),
+                            (float) (map[px][py].position.y * size + offsetY),
                             // TODO maybe instead give directions (U/D/L/R) ?
                             // TODO or somehow normalize this to match fish location
                     };
@@ -409,7 +440,7 @@ std::vector<vec2> EntityGrid::getPath(const Fish& fish) {
                     px = temp.x;
                     py = temp.y;
                 }
-                // Add start node
+                // Ignore start node
                 /*vec2 pos = {
                         (float) (map[px][py].position.x * size) + (size / 2.f),
                         (float) (map[px][py].position.y * size) + (size / 2.f),
@@ -433,7 +464,6 @@ std::vector<vec2> EntityGrid::getPath(const Fish& fish) {
                 float newH = std::abs(adjX); // heuristic = straight line distance to the edge of map
                 float newF = newG + newH;
 
-                // TODO clearance checking?
 
                 if (DEBUG_LOG)std::cout << "new(f="<<newF<<",g="<<newG<<",h="<<newH<<"), old(f="<<map[adjX][adjY].f<<",g="<<map[adjX][adjY].g<<",h="<<map[adjX][adjY].h<<")"<< std::endl;
 
@@ -444,7 +474,7 @@ std::vector<vec2> EntityGrid::getPath(const Fish& fish) {
                     map[adjX][adjY].g = newG;
                     map[adjX][adjY].h = newH;
                     if (DEBUG_LOG)std::cout << "Contains? "<< open.count(map[adjX][adjY]) << std::endl;
-                    open.emplace(map[adjX][adjY]);
+                    open.emplace(map[adjX][adjY]); // TODO nodes not being added to open properly
                     debugopencount++;
                     if (DEBUG_LOG)std::cout << "Added node to open: " << std::endl;
                     if (DEBUG_LOG)printNode(map[adjX][adjY]);
@@ -473,4 +503,8 @@ void EntityGrid::printNode(Node node) {
     std::cout <<"\tparent: (" << node.parent.x << "," << node.parent.y << ")," << std::endl;
     std::cout <<"\tg=" << node.g << ", h=" << node.h << ", f=" << node.f << std::endl;
     std::cout << "}" << std::endl;
+}
+
+bool EntityGrid::isValid(int x, int y) {
+    return !(x < 0 || x >= gridW || y < 0 || y >= gridH);
 }
