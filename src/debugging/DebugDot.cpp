@@ -5,32 +5,17 @@
 #include <iostream>
 #include "DebugDot.hpp"
 
-Texture DebugDot::dot_texture;
+constexpr int size = 12;
 
 bool DebugDot::init() {
-    // Load shared texture
-    if (!dot_texture.is_valid())
-    {
-        if (!dot_texture.load_from_file(textures_path("collision.png")))
-        {
-            fprintf(stderr, "Failed to load turtle texture!");
-            return false;
-        }
-    }
-
     // The position corresponds to the center of the texture.
-    float wr = dot_texture.width * 0.5f;
-    float hr = dot_texture.height * 0.5f;
+    float r = size * 0.5f;
 
-    TexturedVertex vertices[4];
-    vertices[0].position = { -wr, +hr, -0.01f };
-    vertices[0].texcoord = { 0.f, 1.f };
-    vertices[1].position = { +wr, +hr, -0.01f };
-    vertices[1].texcoord = { 1.f, 1.f,  };
-    vertices[2].position = { +wr, -hr, -0.01f };
-    vertices[2].texcoord = { 1.f, 0.f };
-    vertices[3].position = { -wr, -hr, -0.01f };
-    vertices[3].texcoord = { 0.f, 0.f };
+    Vertex vertices[4];
+    vertices[0].position = { -r, +r, -0.01f };
+    vertices[1].position = { +r, +r, -0.01f };
+    vertices[2].position = { +r, -r, -0.01f };
+    vertices[3].position = { -r, -r, -0.01f };
 
     // Counterclockwise as it's the default opengl front winding direction.
     uint16_t indices[] = { 0, 3, 1, 1, 3, 2 };
@@ -41,7 +26,7 @@ bool DebugDot::init() {
     // Vertex Buffer creation
     glGenBuffers(1, &mesh.vbo);
     glBindBuffer(GL_ARRAY_BUFFER, mesh.vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(TexturedVertex) * 4, vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * 4, vertices, GL_STATIC_DRAW);
 
     // Index Buffer creation
     glGenBuffers(1, &mesh.ibo);
@@ -54,10 +39,11 @@ bool DebugDot::init() {
         return false;
 
     // Loading shaders
-    if (!effect.load_from_file(shader_path("textured.vs.glsl"), shader_path("textured.fs.glsl")))
+    if (!effect.load_from_file(shader_path("coloured.vs.glsl"), shader_path("coloured.fs.glsl")))
         return false;
 
-    physics.scale = { 0.2f, 0.2f };
+
+    physics.scale = { 1.f, 1.f };
 
     return true;
 }
@@ -74,15 +60,14 @@ void DebugDot::destroy() {
 
 void DebugDot::draw(const mat3 &projection) {}
 
-void DebugDot::draw(const mat3 &projection, vec2 pos) {
+void DebugDot::draw(const mat3 &projection, vec3 color, vec2 pos, float rad, vec2 scale) {
     // Transformation code, see Rendering and Transformation in the template specification for more info
     // Incrementally updates transformation matrix, thus ORDER IS IMPORTANT
     transform.begin();
     transform.translate(pos);
-    transform.rotate(0);
-    transform.scale(physics.scale);
+    transform.rotate(rad);
+    transform.scale(scale);
     transform.end();
-    //std::cout<<pos.x <<","<<pos.y<<std::endl;
 
     // Setting shaders
     glUseProgram(effect.program);
@@ -93,7 +78,7 @@ void DebugDot::draw(const mat3 &projection, vec2 pos) {
 
     // Getting uniform locations for glUniform* calls
     GLint transform_uloc = glGetUniformLocation(effect.program, "transform");
-    GLint color_uloc = glGetUniformLocation(effect.program, "fcolor");
+    GLint color_uloc = glGetUniformLocation(effect.program, "color");
     GLint projection_uloc = glGetUniformLocation(effect.program, "projection");
 
     // Setting vertices and indices
@@ -103,23 +88,15 @@ void DebugDot::draw(const mat3 &projection, vec2 pos) {
 
     // Input data location as in the vertex buffer
     GLint in_position_loc = glGetAttribLocation(effect.program, "in_position");
-    GLint in_texcoord_loc = glGetAttribLocation(effect.program, "in_texcoord");
     glEnableVertexAttribArray(in_position_loc);
-    glEnableVertexAttribArray(in_texcoord_loc);
-    glVertexAttribPointer(in_position_loc, 3, GL_FLOAT, GL_FALSE, sizeof(TexturedVertex), (void*)0);
-    glVertexAttribPointer(in_texcoord_loc, 2, GL_FLOAT, GL_FALSE, sizeof(TexturedVertex), (void*)sizeof(vec3));
-
-    // Enabling and binding texture to slot 0
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, dot_texture.id);
+    glVertexAttribPointer(in_position_loc, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
 
     // Setting uniform values to the currently bound program
     glUniformMatrix3fv(transform_uloc, 1, GL_FALSE, (float*)&transform.out);
-    float color[] = { 0.5f,0.f,0.f };
-    glUniform3fv(color_uloc, 1, color);
+    float c[] = { color.x, color.y, color.z };
+    glUniform3fv(color_uloc, 1, c);
     glUniformMatrix3fv(projection_uloc, 1, GL_FALSE, (float*)&projection);
 
     // Drawing!
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, nullptr);
 }
-

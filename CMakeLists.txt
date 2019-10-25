@@ -49,7 +49,7 @@ set(SOURCE_FILES
 	src/world.hpp
   src/pebbles.hpp
     src/bullet.cpp
-    src/bullet.hpp src/debugging/DebugView.cpp src/debugging/DebugView.hpp src/debugging/DebugDot.cpp src/debugging/DebugDot.hpp src/debugging/DebugCollision.cpp src/debugging/DebugCollision.hpp src/debugging/DebugScreenBoundary.cpp src/debugging/DebugScreenBoundary.hpp src/EntityGrid.cpp src/EntityGrid.hpp)
+    src/bullet.hpp src/debugging/DebugView.cpp src/debugging/DebugView.hpp src/debugging/DebugDot.cpp src/debugging/DebugDot.hpp src/debugging/DebugScreenBoundary.cpp src/debugging/DebugScreenBoundary.hpp src/EntityGrid.cpp src/EntityGrid.hpp)
 
 if (IS_OS_MAC)
     include_directories(/usr/local/include)

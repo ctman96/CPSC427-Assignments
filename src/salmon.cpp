@@ -105,6 +105,7 @@ void Salmon::update(float ms, std::map<int, bool> &keyMap, vec2 mouse_position, 
 	if (m_is_alive)
 	{
 	    // Delay changing rotation after a collision
+		// TODO: This doesn't work for backwards collisions, do something with trig to get the collision angle
 	    if (m_update_rotation) {
             set_rotation(atan2(m_velocity.x, m_velocity.y));
             m_update_rotation = false;

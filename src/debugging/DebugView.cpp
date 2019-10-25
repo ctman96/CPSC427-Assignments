@@ -6,7 +6,10 @@
 #include "DebugView.hpp"
 
 bool DebugView::init(vec2 screen) {
-    return debugDot.init() && debugCollision.init() && debugBoundary.init(screen);
+    bool ret = true;
+    ret &= debugDot.init();
+    ret &= debugBoundary.init(screen);
+    return ret;
 }
 
 void DebugView::destroy() {
@@ -24,16 +27,16 @@ void DebugView::draw(const mat3 &projection) {}
 void DebugView::draw(const mat3 &projection, Salmon *salmon, const std::vector<Fish> * fishes) {
     // Salmon vertices
     for(auto dot : salmon->getM_debug_vertices()) {
-        debugCollision.draw(projection, dot, false);
+        debugDot.draw(projection, { 1.f, 1.f, 1.f }, dot, 0.785f, {0.6f,0.6f});
     }
     // Salmon Collision vertices
     for(auto dot : salmon->getM_debug_collision_points()) {
-        debugCollision.draw(projection, dot, true);
+        debugDot.draw(projection, { 1.f, 0.2f, 0.2f }, dot, 0.785f, {0.6f,0.6f});
     }
     // Fish dots
     for (const auto &fish : *fishes) {
         for(auto dot : fish.getM_path()){
-            debugDot.draw(projection, dot);
+            debugDot.draw(projection, { 0.5f, 0.f, 0.f }, dot);
         }
     }
     debugBoundary.draw(projection);

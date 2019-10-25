@@ -9,7 +9,6 @@
 #include "common.hpp"
 #include "salmon.hpp"
 #include "DebugDot.hpp"
-#include "DebugCollision.hpp"
 #include "DebugScreenBoundary.hpp"
 
 class DebugView : public Entity {
@@ -20,7 +19,6 @@ public:
     void draw(const mat3& projection, Salmon* salmon, const std::vector<Fish> * fish);
 private:
     DebugDot debugDot;
-    DebugCollision debugCollision;
     DebugScreenBoundary debugBoundary;
 };
 

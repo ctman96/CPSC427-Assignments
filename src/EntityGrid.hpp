@@ -37,18 +37,26 @@ struct Node {
 };
 
 typedef bool isDestinationFn(const std::vector<std::vector<EType>>& grid, pair pos, pair dest);
-typedef float heuristicFn(const std::vector<std::vector<EType>>& grid, pair pos, pair dest); // TODO heuristifc function
+typedef float heuristicFn(const std::vector<std::vector<EType>>& grid, pair pos, pair dest);
+
+class EntityGridSquare : public Entity {
+public:
+    bool init(float size);
+    void destroy();
+    void draw(const mat3 &projection) override;
+    void draw(const mat3 &projection, vec2 pos, EType type);
+};
 
 class EntityGrid : public Entity{
 public:
     bool init(int width, int height, int size);
+    void destroy();
     void clear();
     void addToGrid(const Fish& fish);
     void addToGrid(const Salmon& salmon);
     void addToGrid(const Turtle& turtle);
     void addBoxToGrid(vec2 tl, vec2 br, EType type);
     void draw(const mat3 &projection) override;
-    void draw(const mat3 &projection, int index, EType type);
     std::vector<vec2> getPath(const Fish& fish);
     std::vector<vec2> getPath(const Turtle& turtle, const Salmon& salmon);
 private:
@@ -57,10 +65,10 @@ private:
     int gridH;
     int size;
     std::vector<Vertex> m_vertices;
+    EntityGridSquare square;
     static void printNode(Node node);
     bool isValid(int x, int y);
-    std::vector<vec2> search(vec2 position, vec2 bbox, const std::vector<EType> avoid, isDestinationFn destFn, heuristicFn h,  pair dest={-1,-1}, bool DEBUG_LOG=false);
+    std::vector<vec2> search(vec2 position, vec2 bbox, std::vector<EType> avoid, isDestinationFn destFn, heuristicFn h,  pair dest={-1,-1}, bool DEBUG_LOG=false);
 };
-
 
 #endif //SALMON_ENTITYGRID_HPP
