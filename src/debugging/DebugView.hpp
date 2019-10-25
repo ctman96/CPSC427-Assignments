@@ -11,6 +11,7 @@
 #include "DebugDot.hpp"
 #include "DebugScreenBoundary.hpp"
 
+// Handles rendering (most) debug visualization
 class DebugView : public Entity {
 public:
     bool init(vec2 screen);

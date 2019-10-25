@@ -155,16 +155,16 @@ void Salmon::update(float ms, std::map<int, bool> &keyMap, vec2 mouse_position, 
 	}
 	else
 	{
-	transform.begin();
-	transform.translate({motion.position.x, motion.position.y });
-	transform.scale(physics.scale);
-	transform.rotate(motion.radians - 3.14f/2);
-	transform.end();
-	m_debug_vertices.clear();
-	for(auto vertex : m_vertices) {
-		vec3 pos = mul(transform.out, vec3{vertex.position.x, vertex.position.y, 1.0});
-		m_debug_vertices.emplace_back(vec2{pos.x, pos.y});
-	}
+		transform.begin();
+		transform.translate({motion.position.x, motion.position.y });
+		transform.scale(physics.scale);
+		transform.rotate(motion.radians - 3.14f/2);
+		transform.end();
+		m_debug_vertices.clear();
+		for(auto vertex : m_vertices) {
+			vec3 pos = mul(transform.out, vec3{vertex.position.x, vertex.position.y, 1.0});
+			m_debug_vertices.emplace_back(vec2{pos.x, pos.y});
+		}
 		// If dead we make it face upwards and sink deep down
 		set_rotation(3.1415f);
 		move({ 0.f, step });
@@ -187,8 +187,9 @@ bool Salmon::check_wall_collisions(vec2 screen) {
     vec2 tl = { screen.x - bufX, screen.y - bufY };
     vec2 br = { bufX, bufY };
 
+    // Transform vertices to proper values
     transform.begin();
-    transform.translate({motion.position.x, motion.position.y });
+    transform.translate({motion.position.x, motion.position.y});
     transform.scale(physics.scale);
     transform.rotate(motion.radians - 3.14f/2);
     transform.end();
@@ -197,26 +198,34 @@ bool Salmon::check_wall_collisions(vec2 screen) {
     bool flipY = false;
     m_debug_vertices.clear();
     for(auto vertex : m_vertices) {
+    	// Apply transformation
         vec3 pos = mul(transform.out, vec3{vertex.position.x, vertex.position.y, 1.0});
         bool collision = false;
+        // If a collision on x, flip x velocity
         if ((m_velocity.x < 0 && pos.x <= tl.x) || (m_velocity.x > 0 && pos.x >= br.x)) {
             flipX = true;
             collision = true;
         }
+		// If a collision on y, flip y velocity
         if ((m_velocity.y < 0 && pos.y <= tl.y) || (m_velocity.y > 0 && pos.y >= br.y)) {
             flipY = true;
             collision = true;
         }
+        // Add colliding vertices to collision list
         if (collision)
             m_debug_collision_points.emplace_back(vec2{pos.x, pos.y});
+        // Add all vertices to vertex list
         m_debug_vertices.emplace_back(vec2{pos.x, pos.y});
     }
+    // Flip x velocity
     if (flipX) {
         m_velocity.x = -m_velocity.x;
     }
+    // Flip Y velocity
     if (flipY) {
         m_velocity.y = -m_velocity.y;
     }
+    // Wait to adjust rotation until next frame
     if (flipX || flipY) {
 		m_update_rotation = true;
 	}
@@ -340,14 +349,10 @@ bool Salmon::collides_with(const Fish& fish)
 // Check exact collision with a box
 bool Salmon::collides_with_exact(int left, int right, int top, int bottom) {
 
-	//std::cout << motion.position.x << "," << motion.position.y << std::endl;
 	bool ret = false;
 
 	for(auto vertex : m_vertices) {
-		//std::cout << std::endl;
-		//std::cout << vertex.position.x << "," << vertex.position.y << std::endl;
 		vec3 pos = mul(transform.out, vec3{vertex.position.x, vertex.position.y, 1.0});
-		//std::cout << pos.x << "," << pos.y << std::endl;
 		if (pos.x >= left &&
 		  	pos.x <= right &&
 			pos.y >= top &&

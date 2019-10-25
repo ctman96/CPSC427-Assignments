@@ -4,6 +4,7 @@
 
 #include "DebugScreenBoundary.hpp"
 
+// Generate boundary 95% of screen
 bool DebugScreenBoundary::init(vec2 screen) {
     float bufX = screen.x * 0.95f;
     float bufY = screen.y * 0.95f;

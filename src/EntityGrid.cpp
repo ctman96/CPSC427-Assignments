@@ -9,9 +9,11 @@
 #include <limits>
 #include "EntityGrid.hpp"
 
+// Initialization, generate grid
 bool EntityGrid::init(int width, int height, int size) {
     m_vertices.clear();
 
+    // Calculate grid size
     gridW = (int)std::ceil((float)width / (float)size);
     gridH = (int)std::ceil((float)height / (float)size);
     this->size = size;
@@ -93,6 +95,7 @@ void EntityGrid::destroy() {
     square.destroy();
 }
 
+// Set all squares as emtpy
 void EntityGrid::clear() {
     for (int x = 0; x < gridW; x++) {
         grid[x].clear();
@@ -145,6 +148,7 @@ int bound(int val, int low, int hi) {
     return std::max(low, std::min(val, hi));
 }
 
+// Calculates which squares the box(tl,br) occupies, and sets as type
 void EntityGrid::addBoxToGrid(vec2 tl, vec2 br, EType type) {
     auto l = bound((int)std::floor(tl.x / (float)size), 0, gridW);
     auto r = bound((int)std::ceil(br.x / (float)size), l, gridW);
@@ -195,6 +199,7 @@ void EntityGrid::draw(const mat3 &projection) {
     // Drawing!
     glDrawElements(GL_LINES, ((gridW+1) * gridH * 2) + ((gridH+1) * gridW * 2), GL_UNSIGNED_SHORT, nullptr);
 
+    // Draw grid square colors
     for (int i=0; i < gridW; ++i) {
         for (int j = 0; j < gridH; ++j) {
             Vertex v = m_vertices[i*(gridH+1)+j];
@@ -205,24 +210,21 @@ void EntityGrid::draw(const mat3 &projection) {
 
 
 bool isDestFish(const std::vector<std::vector<EType>>& egrid, pair pos, pair dest) {
-    return pos.x == 0;
+    return pos.x == 0; // Fish destination is anywhere on left edge of screen
 }
 float fishH(const std::vector<std::vector<EType>>& grid, pair pos, pair dest) {
-    return std::abs(pos.x);
+    return std::abs(pos.x); // Heuristic = distance to left edge of screen - Admissible
 }
 std::vector<vec2> EntityGrid::getPath(const Fish& fish) {
-    bool DEBUG_LOG =false;
-
     vec2 fpos = fish.get_position();
     vec2 fbox = fish.get_bounding_box();
-
-    // TODO heuristifc function - x position (distance to end of screen)
 
     return search(fpos, fbox, {EType::player}, &isDestFish, &fishH);
 }
 
+
 bool isDestTurtle(const std::vector<std::vector<EType>>& grid, pair pos, pair dest) {
-    return pos.x == dest.x && pos.y == dest.y;
+    return pos.x == dest.x && pos.y == dest.y; // Turtle destination is the specific dest point (player);
 }
 float turtleH(const std::vector<std::vector<EType>>& grid, pair pos, pair dest) {
     // TODO - Distance to player
@@ -240,6 +242,7 @@ std::vector<vec2> EntityGrid::getPath(const Turtle &turtle, const Salmon &salmon
     return search(tpos, tbox, {}, &isDestTurtle, &turtleH, s);
 }
 
+// Debug printing node details
 void EntityGrid::printNode(Node node) {
     std::cout << "Node { " << std::endl;
     std::cout <<"\tposition: (" << node.position.x << "," << node.position.y << ")," << std::endl;
@@ -248,12 +251,14 @@ void EntityGrid::printNode(Node node) {
     std::cout << "}" << std::endl;
 }
 
+// Check if x,y within grid
 bool EntityGrid::isValid(int x, int y) {
     return !(x < 0 || x >= gridW || y < 0 || y >= gridH);
 }
 
 // A* Search
 std::vector<vec2> EntityGrid::search(vec2 position, vec2 bbox, const std::vector<EType> avoid, isDestinationFn isDest, heuristicFn hfn, pair dest, bool DEBUG_LOG) {
+    // Caclulate size of the object searching
     float wr = bbox.x/2;
     float hr = bbox.y/2;
     vec2 tl = {position.x-wr, position.y-hr};
@@ -267,16 +272,17 @@ std::vector<vec2> EntityGrid::search(vec2 position, vec2 bbox, const std::vector
     auto w = r - l;
     auto h = b - t;
 
+    // Determine centeral square to search from
     auto fx = (int)std::floor((position.x) / (float)size);
     auto fy = (int)std::floor((position.y) / (float)size);
 
+    // Keep offset for path generation
     auto offsetX = position.x - (size * fx);
     auto offsetY = position.y - (size * fy);
 
-    // std::cout << "("<<fpos.x<<","<<fpos.y<<")" << "("<<fx<<","<<fy<<")"  << "("<<offsetX<<","<<offsetY<<")"  << std::endl;
-
     const float MAX = std::numeric_limits<float>::max();
 
+    // Track which nodes have been closed
     bool closed[gridW][gridH];
 
     // Generate node map with initial values
@@ -292,8 +298,7 @@ std::vector<vec2> EntityGrid::search(vec2 position, vec2 bbox, const std::vector
         }
     }
 
-    // std::cout << "("<<l<<","<<t<<")" << "("<<r<<","<<b<<")"  << "("<<fx<<","<<fy<<")"  << std::endl;
-
+    // If starting position is not valid, or if we're already at the destination, return empty
     if (!isValid(fx, fy) || isDest(grid, {fx, fy}, dest)) {
         return std::vector<vec2>();
     }
@@ -306,6 +311,7 @@ std::vector<vec2> EntityGrid::search(vec2 position, vec2 bbox, const std::vector
     map[x][y].h = 0.0;
     map[x][y].parent = {x,y};
 
+    // Add the starting node to the list of open nodes
     std::vector<Node> open;
     open.emplace_back(map[x][y]);
     int debugopencount = 1;
@@ -369,13 +375,12 @@ std::vector<vec2> EntityGrid::search(vec2 position, vec2 bbox, const std::vector
                     }
                 }
             }
-
             if (!clear){
                 if (DEBUG_LOG) std::cout << "Ignoring" << std::endl;
                 continue;
             }
 
-            // Check for destination (left edge of map / x = 0)
+            // Check for destination
             if (isDest(grid, {adjX, adjY}, dest)) {
                 if (DEBUG_LOG)std::cout << "Node (" << adjX <<","<< adjY << ") is destination" << std::endl;
                 map[adjX][adjY].parent = node.position;
@@ -400,13 +405,13 @@ std::vector<vec2> EntityGrid::search(vec2 position, vec2 bbox, const std::vector
                     px = temp.x;
                     py = temp.y;
                 }
-                // Note: Ignoring start node
+                // Note: Ignoring starting node
 
                 if (DEBUG_LOG)std::cout << std::endl << "Successful Search" << std::endl << std::endl<< "=========================" << std::endl;
                 return path;
             }
 
-            // check if not already closed
+            // Check if not already closed
             if (!closed[adjX][adjY]){
                 if (DEBUG_LOG)std::cout << "Node (" << adjX <<","<< adjY << ") is not closed, checking path" << std::endl;
 
@@ -438,11 +443,8 @@ std::vector<vec2> EntityGrid::search(vec2 position, vec2 bbox, const std::vector
         iterN++;
     } while (!open.empty());
 
-    if (DEBUG_LOG)std::cout << std::endl;
-    if (DEBUG_LOG)std::cout << "Failed Search" << std::endl;
-    if (DEBUG_LOG)std::cout << std::endl;
-    if (DEBUG_LOG)std::cout << "=========================" << std::endl;
-
+    if (DEBUG_LOG)std::cout << std::endl<< "Failed Search" << std::endl << std::endl << "=========================" << std::endl;
+    // Unable to find path, return empty
     return std::vector<vec2>();
 }
 

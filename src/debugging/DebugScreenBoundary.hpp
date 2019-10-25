@@ -8,6 +8,7 @@
 
 #include <common.hpp>
 
+// Draws the screen boundary square
 class DebugScreenBoundary : public Entity{
 public:
     bool init(vec2 screen);

@@ -8,6 +8,7 @@
 
 #include <common.hpp>
 
+// Renders a solid square
 class DebugDot : public Entity {
 public:
     bool init();
