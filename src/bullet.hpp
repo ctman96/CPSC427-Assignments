@@ -15,7 +15,7 @@ class Bullet : public Entity {
     static Texture bullet_texture;
 
 public:
-    bool init(vec2 position, vec2 mouse_position);
+    bool init(vec2 position,float rotation);
     void destroy();
     void update(float ms);
     void draw(const mat3& projection)override;

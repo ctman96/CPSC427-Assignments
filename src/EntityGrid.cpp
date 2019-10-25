@@ -227,14 +227,14 @@ bool isDestTurtle(const std::vector<std::vector<EType>>& grid, pair pos, pair de
     return pos.x == dest.x && pos.y == dest.y; // Turtle destination is the specific dest point (player);
 }
 float turtleH(const std::vector<std::vector<EType>>& grid, pair pos, pair dest) {
-    // TODO - Distance to player
-    return 0;//std::sqrt(std::exp(pos.x - dest.x));
+    // Direct distance to player - admissible
+    return (float)(std::sqrt(std::pow((pos.x - dest.x), 2) + std::pow((pos.y - dest.y), 2) ));
 }
 std::vector<vec2> EntityGrid::getPath(const Turtle &turtle, const Salmon &salmon) {
     vec2 tpos = turtle.get_position();
     vec2 tbox = turtle.get_bounding_box();
 
-    vec2 spos = turtle.get_position();
+    vec2 spos = salmon.get_position();
     auto sx = (int)std::floor((spos.x) / (float)size);
     auto sy = (int)std::floor((spos.y) / (float)size);
     pair s = { sx, sy };

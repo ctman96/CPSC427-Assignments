@@ -9,7 +9,7 @@ Texture Bullet::bullet_texture;
 
 float BULLET_SPEED = 15;
 
-bool Bullet::init(vec2 position, vec2 mouse_position) {
+bool Bullet::init(vec2 position, float rotation) {
     // Load shared texture
     if (!bullet_texture.is_valid())
     {
@@ -63,7 +63,7 @@ bool Bullet::init(vec2 position, vec2 mouse_position) {
     m_scale.x = 0.4f;
     m_scale.y = 0.4f;
 
-    m_rotation = atan2(mouse_position.x - position.x, mouse_position.y - position.y);
+    m_rotation = rotation;
 
     // place bullet n away from center of salmon
     m_position.x = position.x + 100*sin(m_rotation);

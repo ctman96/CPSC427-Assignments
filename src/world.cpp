@@ -10,7 +10,7 @@
 // Same as static in c, local to compilation unit
 namespace
 {
-	const size_t MAX_TURTLES = 15;
+	const size_t MAX_TURTLES = 2;
 	const size_t MAX_FISH = 5;
 	const size_t TURTLE_DELAY_MS = 4000;
 	const size_t FISH_DELAY_MS = 10000;
@@ -246,10 +246,13 @@ bool World::update(float elapsed_ms)
 	// faster based on current
 	m_salmon.update(elapsed_ms, keyMap, mouse_position, screen);
 	for (auto& turtle : m_turtles) {
-        turtle.update(elapsed_ms * m_current_speed, aiGrid.getPath(turtle, m_salmon));
+		turtle.setM_path(aiGrid.getPath(turtle, m_salmon));
+        turtle.update(elapsed_ms * m_current_speed);
 	}
-	for (auto& fish : m_fish)
-		fish.update(elapsed_ms * m_current_speed, &aiGrid);
+	for (auto& fish : m_fish) {
+		fish.setM_path(aiGrid.getPath(fish));
+		fish.update(elapsed_ms * m_current_speed);
+	}
 	for (auto& bullet : m_bullets)
 	    bullet.update(elapsed_ms*m_current_speed);
 
@@ -435,7 +438,7 @@ void World::draw()
 
 
 	if (m_debug) {
-		m_debug_view.draw(projection_2D, &m_salmon, &m_fish);
+		m_debug_view.draw(projection_2D, &m_salmon, &m_fish, &m_turtles);
 		if (m_freeze_timer <= 0 && m_salmon.getM_debug_collision_points().size() > 0)
 			m_freeze_timer = 1000;
 	}
@@ -482,7 +485,7 @@ bool World::spawn_bullet() {
     vec2 position = m_salmon.get_position();
 
     Bullet bullet;
-    if (bullet.init(position, mouse_position)) {
+    if (bullet.init(position, m_salmon.get_rotation())) {
         m_bullets.emplace_back(bullet);
         return true;
     }

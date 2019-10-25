@@ -17,7 +17,7 @@ public:
     bool init(vec2 screen);
     void destroy();
     void draw(const mat3& projection) override;
-    void draw(const mat3& projection, Salmon* salmon, const std::vector<Fish> * fish);
+    void draw(const mat3& projection, Salmon* salmon, const std::vector<Fish> * fish, const std::vector<Turtle> * turtles);
 private:
     DebugDot debugDot;
     DebugScreenBoundary debugBoundary;

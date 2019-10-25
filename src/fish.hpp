@@ -20,7 +20,7 @@ public:
 	
 	// Update fish
 	// ms represents the number of milliseconds elapsed from the previous update() call
-	void update(float ms, EntityGrid* aiGrid);
+	void update(float ms);
 
 	// Renders the fish
 	// projection is the 2D orthographic projection matrix
@@ -36,6 +36,8 @@ public:
 	vec2 get_bounding_box() const;
 
 	const std::vector<vec2> &getM_path() const;
+
+	void setM_path(const std::vector<vec2> &m_path);
 
 private:
 	std::vector<vec2> m_path;

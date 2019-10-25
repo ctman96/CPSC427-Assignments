@@ -18,7 +18,7 @@ public:
 
 	// Update turtle due to current
 	// ms represents the number of milliseconds elapsed from the previous update() call
-	void update(float ms, std::vector<vec2> newPath);
+	void update(float ms);
 
 	// Renders the salmon
 	// projection is the 2D orthographic projection matrix
@@ -33,7 +33,9 @@ public:
 	// Returns the turtle' bounding box for collision detection, called by collides_with()
 	vec2 get_bounding_box() const;
 
-    const std::vector<vec2> &getMPath() const;
+	const std::vector<vec2> &getM_path() const;
+
+	void setM_path(const std::vector<vec2> &m_path);
 
 private:
     std::vector<vec2> m_path;

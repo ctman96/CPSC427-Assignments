@@ -24,7 +24,7 @@ void DebugView::destroy() {
 
 void DebugView::draw(const mat3 &projection) {}
 
-void DebugView::draw(const mat3 &projection, Salmon *salmon, const std::vector<Fish> * fishes) {
+void DebugView::draw(const mat3 &projection, Salmon *salmon, const std::vector<Fish> * fishes, const std::vector<Turtle> * turtles) {
     // Salmon vertices
     for(auto dot : salmon->getM_debug_vertices()) {
         debugDot.draw(projection, { 1.f, 1.f, 1.f }, dot, 0.785f, {0.6f,0.6f});
@@ -37,6 +37,12 @@ void DebugView::draw(const mat3 &projection, Salmon *salmon, const std::vector<F
     for (const auto &fish : *fishes) {
         for(auto dot : fish.getM_path()){
             debugDot.draw(projection, { 0.5f, 0.f, 0.f }, dot);
+        }
+    }
+    // Turtle dots
+    for (const auto &turtle : *turtles) {
+        for(auto dot : turtle.getM_path()){
+            debugDot.draw(projection, { 0.5f, 0.8f, 0.f }, dot);
         }
     }
     debugBoundary.draw(projection);

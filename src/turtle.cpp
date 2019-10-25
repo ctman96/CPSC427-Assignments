@@ -78,28 +78,17 @@ void Turtle::destroy()
 	glDeleteShader(effect.program);
 }
 
-void Turtle::update(float ms, std::vector<vec2> newPath)
+void Turtle::update(float ms)
 {
     float step = motion.speed * (ms / 1000);
-
-    // Get path
-    if (!newPath.empty()) {
-        m_path = newPath;
-    }
-
 
     if (!m_path.empty() && m_path.back().x > 32.f) {
         vec2 dest = m_path.back();
 
-        float xdif = dest.x - motion.position.x;
+		// motion.radians = (float)atan2(dest.x - motion.position.x, dest.y - motion.position.y) - 3.14/2;
+
+		float xdif = dest.x - motion.position.x;
         float ydif = dest.y - motion.position.y;
-        /*
-		float rad = atan2(xdif, ydif);
-		float dx = step*sin(rad);
-		float dy = step*cos(rad);
-        motion.position.x += dx;
-        motion.position.y += dy;
-         */
 
         if (std::abs(xdif) >= 1) {
             motion.position.x += (xdif > 0) ? step : -1*step;
@@ -109,6 +98,7 @@ void Turtle::update(float ms, std::vector<vec2> newPath)
             motion.position.x += -1 * step;
         }
     } else {
+		motion.radians = 0;
         motion.position.x += -1 * step;
     }
 }
@@ -179,6 +169,12 @@ vec2 Turtle::get_bounding_box() const
 	return { std::fabs(physics.scale.x) * turtle_texture.width, std::fabs(physics.scale.y) * turtle_texture.height };
 }
 
-const std::vector<vec2> &Turtle::getMPath() const {
+const std::vector<vec2> &Turtle::getM_path() const {
     return m_path;
+}
+
+void Turtle::setM_path(const std::vector<vec2> &m_path) {
+	if (!m_path.empty()) {
+		Turtle::m_path = m_path;
+	}
 }

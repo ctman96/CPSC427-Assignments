@@ -79,16 +79,9 @@ void Fish::destroy()
 	glDeleteShader(effect.program);
 }
 
-void Fish::update(float ms, EntityGrid* aiGrid)
+void Fish::update(float ms)
 {
 	float step = motion.speed * (ms / 1000);
-
-	// Get path
-	std::vector<vec2> newPath = aiGrid->getPath(*this);
-	if (!newPath.empty()) {
-		m_path = newPath;
-	}
-
 
 	if (!m_path.empty() && m_path.back().x > 32.f) {
 		vec2 dest = m_path.back();
@@ -196,4 +189,10 @@ vec2 Fish::get_bounding_box() const
 
 const std::vector<vec2> &Fish::getM_path() const {
 	return m_path;
+}
+
+void Fish::setM_path(const std::vector<vec2> &m_path) {
+	if (!m_path.empty()) {
+		Fish::m_path = m_path;
+	}
 }
