@@ -84,6 +84,24 @@ bool Salmon::init()
 	m_light_up_countdown_ms = -1.f;
 	m_update_rotation = std::numeric_limits<float>::max();
 
+
+	// Uhh
+	float minX, minY = 99999;
+	float maxX, maxY = 0;
+	for (auto vertex : m_vertices) {
+		float x = vertex.position.x;
+		float y = vertex.position.y;
+		if (x < minX) minX = x;
+		if (x > maxX) maxX = x;
+		if (y < minY) minY = y;
+		if (y > maxY) maxY = y;
+	}
+
+	float width = maxX - minX;
+	float height = maxY - minY;
+	float maxwh = std::max(width, height);
+	m_bbox = {maxwh, maxwh};
+
 	return true;
 }
 
@@ -102,6 +120,26 @@ void Salmon::destroy()
 // Called on each frame by World::update()
 void Salmon::update(float ms, std::map<int, bool> &keyMap, vec2 mouse_position, vec2 screen)
 {
+	// Add all vertices to debug_vertices
+	transform.begin();
+	transform.translate({motion.position.x, motion.position.y });
+	transform.scale(physics.scale);
+	transform.rotate(motion.radians - 3.14f/2);
+	transform.end();
+	m_debug_vertices.clear();
+	for(auto vertex : m_vertices) {
+		// TODO ??? vertices are offset the further away from the center of screen you are.
+		// mul(mul(world_projection, transform.out), vec3{vertex.position.x, vertex.position.y, 1.0})
+		// mul(mul(transform.out, world_projection), vec3{vertex.position.x, vertex.position.y, 1.0})
+		//std::cout << world_projection.c0.x << "," << world_projection.c0.y << "," << world_projection.c0.z << std::endl;
+		//std::cout << world_projection.c1.x << "," << world_projection.c1.y << "," << world_projection.c1.z << std::endl;
+		//std::cout << world_projection.c2.x << "," << world_projection.c2.y << "," << world_projection.c2.z << std::endl << std::endl;
+		// TODO maybe try using just passing the basic vertices into debugDot, and providing the transformation matrix to it's shader?
+
+		vec3 pos = mul(transform.out, vec3{vertex.position.x, vertex.position.y, 1.0});
+		m_debug_vertices.emplace_back(vec2{pos.x, pos.y});
+	}
+
 	float step = motion.speed * (ms / 1000);
 	if (m_is_alive)
 	{
@@ -155,16 +193,6 @@ void Salmon::update(float ms, std::map<int, bool> &keyMap, vec2 mouse_position, 
 	}
 	else
 	{
-		transform.begin();
-		transform.translate({motion.position.x, motion.position.y });
-		transform.scale(physics.scale);
-		transform.rotate(motion.radians - 3.14f/2);
-		transform.end();
-		m_debug_vertices.clear();
-		for(auto vertex : m_vertices) {
-			vec3 pos = mul(transform.out, vec3{vertex.position.x, vertex.position.y, 1.0});
-			m_debug_vertices.emplace_back(vec2{pos.x, pos.y});
-		}
 		// If dead we make it face upwards and sink deep down
 		set_rotation(3.1415f);
 		move({ 0.f, step });
@@ -174,81 +202,10 @@ void Salmon::update(float ms, std::map<int, bool> &keyMap, vec2 mouse_position, 
 		m_light_up_countdown_ms -= ms;
 }
 
-
-bool Salmon::check_wall_collisions(vec2 screen) {
-
-
-	// TODO bounding box check first for efficiency
-
-
-    float bufX = screen.x * 0.95f;
-    float bufY = screen.y * 0.95f;
-
-    vec2 tl = { screen.x - bufX, screen.y - bufY };
-    vec2 br = { bufX, bufY };
-
-    // Transform vertices to proper values
-    transform.begin();
-    transform.translate({motion.position.x, motion.position.y});
-    transform.scale(physics.scale);
-    transform.rotate(motion.radians - 3.14f/2);
-    transform.end();
-
-    bool flipX = false;
-    bool flipY = false;
-    m_debug_vertices.clear();
-    for(auto vertex : m_vertices) {
-    	// Apply transformation
-        vec3 pos = mul(transform.out, vec3{vertex.position.x, vertex.position.y, 1.0});
-        bool collision = false;
-        // If a collision on x, flip x velocity
-        if ((m_velocity.x < 0 && pos.x <= tl.x) || (m_velocity.x > 0 && pos.x >= br.x)) {
-            flipX = true;
-            collision = true;
-        }
-		// If a collision on y, flip y velocity
-        if ((m_velocity.y < 0 && pos.y <= tl.y) || (m_velocity.y > 0 && pos.y >= br.y)) {
-            flipY = true;
-            collision = true;
-        }
-        // Add colliding vertices to collision list
-        if (collision)
-            m_debug_collision_points.emplace_back(vec2{pos.x, pos.y});
-        // Add all vertices to vertex list
-        m_debug_vertices.emplace_back(vec2{pos.x, pos.y});
-    }
-    vec2 pre = m_velocity;
-    // Flip x velocity
-    if (flipX) {
-        m_velocity.x = -m_velocity.x;
-    }
-    // Flip Y velocity
-    if (flipY) {
-        m_velocity.y = -m_velocity.y;
-    }
-    // Wait to adjust rotation until next frame
-    if (flipX || flipY) {
-		auto preangle = (float) atan2(pre.x, pre.y);
-		auto postangle = (float) atan2(m_velocity.x, m_velocity.y);
-    	m_update_rotation = motion.radians + postangle - preangle;
-	}
-    return false;
-}
-
 void Salmon::draw(const mat3& projection)
 {
+	world_projection = projection;
 	transform.begin();
-
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	// SALMON TRANSFORMATION CODE HERE
-
-	// see Transformations and Rendering in the specification pdf
-	// the following functions are available:
-	// translate()
-	// rotate()
-	// scale()
-
-
 	transform.translate({motion.position.x, motion.position.y });
     transform.scale(physics.scale);
     transform.rotate(motion.radians - 3.14f/2);
@@ -293,9 +250,6 @@ void Salmon::draw(const mat3& projection)
 	glUniform3fv(color_uloc, 1, color);
 	glUniformMatrix3fv(projection_uloc, 1, GL_FALSE, (float*)&projection);
 
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	// HERE TO SET THE CORRECTLY LIGHT UP THE SALMON IF HE HAS EATEN RECENTLY
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	int light_up = (m_light_up_countdown_ms > 0 ? 1 : 0);
 	glUniform1iv(light_up_uloc, 1, &light_up);
 
@@ -316,40 +270,42 @@ void Salmon::draw(const mat3& projection)
 // need to try to use this technique.
 bool Salmon::collides_with(const Turtle& turtle)
 {
-	// TODO salmon bounding box
 	vec2 turtlepos =  turtle.get_position();
 	vec2 turtlebox = turtle.get_bounding_box();
-	float dx = motion.position.x - turtlepos.x;
-	float dy = motion.position.y - turtlepos.y;
-	float d_sq = dx * dx + dy * dy;
-	float other_r = std::max(turtlebox.x, turtlebox.y);
-	float my_r = std::max(physics.scale.x, physics.scale.y);
-	float r = std::max(other_r, my_r);
-	r *= 0.6f;
-	if (d_sq < r * r)
+	if (collides_with_aabb(turtlepos, turtlebox))
 		return collides_with_exact(turtlepos.x-(turtlebox.x/2), turtlepos.x+(turtlebox.x/2), turtlepos.y-(turtlebox.y/2), turtlepos.y+(turtlebox.y/2));
 	return false;
 }
 
 bool Salmon::collides_with(const Fish& fish)
 {
-	// TODO salmon bounding box
 	vec2 fishpos =  fish.get_position();
 	vec2 fishbox = fish.get_bounding_box();
-	float dx = motion.position.x - fishpos.x;
-	float dy = motion.position.y - fishpos.y;
-	float d_sq = dx * dx + dy * dy;
-	float other_r = std::max(fishbox.x, fishbox.y);
-	float my_r = std::max(physics.scale.x, physics.scale.y);
-	float r = std::max(other_r, my_r);
-	r *= 0.6f;
-	if (d_sq < r * r){
+	if (collides_with_aabb(fishpos, fishbox)){
 		return collides_with_exact(fishpos.x-(fishbox.x/2), fishpos.x+(fishbox.x/2), fishpos.y-(fishbox.y/2), fishpos.y+(fishbox.y/2));
 	}
 	return false;
 }
 
-// Check exact collision with a box
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+// HANDLE SALMON - WALL COLLISIONS HERE
+// DON'T WORRY ABOUT THIS UNTIL ASSIGNMENT 2
+// You will want to write new functions from scratch for checking/handling
+// salmon - wall collisions.
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+// Check inexact AABB collision
+bool Salmon::collides_with_aabb(vec2 pos, vec2 box) {
+	vec2 spos = get_position();
+	vec2 sbox = get_bounding_box();
+
+	return ((spos.x < pos.x + box.x) &&
+			(spos.x + sbox.x > pos.x) &&
+			(spos.y < pos.y + box.y) &&
+			(spos.y + sbox.y > pos.y));
+}
+
+// Check vertices for collision with a box
 bool Salmon::collides_with_exact(int left, int right, int top, int bottom) {
 
 	bool ret = false;
@@ -367,12 +323,69 @@ bool Salmon::collides_with_exact(int left, int right, int top, int bottom) {
 	return ret;
 }
 
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-// HANDLE SALMON - WALL COLLISIONS HERE
-// DON'T WORRY ABOUT THIS UNTIL ASSIGNMENT 2
-// You will want to write new functions from scratch for checking/handling 
-// salmon - wall collisions.
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+bool Salmon::check_wall_collisions(vec2 screen) {
+
+
+	float bufX = screen.x * 0.95f;
+	float bufY = screen.y * 0.95f;
+
+	vec2 tl = { screen.x - bufX, screen.y - bufY };
+	vec2 br = { bufX, bufY };
+
+	// bounding box check first for efficiency
+	vec2 pos = get_position();
+	vec2 box = get_bounding_box();
+	if ((pos.x - box.x > tl.x) &&
+		(pos.x + box.x < br.x) &&
+		(pos.y - box.y > tl.y) &&
+		(pos.y + box.y < br.y)) {
+		return false;
+	}
+
+	// Transform vertices to proper values
+	transform.begin();
+	transform.translate({motion.position.x, motion.position.y});
+	transform.scale(physics.scale);
+	transform.rotate(motion.radians - 3.14f/2);
+	transform.end();
+
+	bool flipX = false;
+	bool flipY = false;
+	for(auto vertex : m_vertices) {
+		// Apply transformation
+		vec3 pos = mul(transform.out, vec3{vertex.position.x, vertex.position.y, 1.0});
+		bool collision = false;
+		// If a collision on x, flip x velocity
+		if ((m_velocity.x < 0 && pos.x <= tl.x) || (m_velocity.x > 0 && pos.x >= br.x)) {
+			flipX = true;
+			collision = true;
+		}
+		// If a collision on y, flip y velocity
+		if ((m_velocity.y < 0 && pos.y <= tl.y) || (m_velocity.y > 0 && pos.y >= br.y)) {
+			flipY = true;
+			collision = true;
+		}
+		// Add colliding vertices to collision list
+		if (collision)
+			m_debug_collision_points.emplace_back(vec2{pos.x, pos.y});
+	}
+	vec2 pre = m_velocity;
+	// Flip x velocity
+	if (flipX) {
+		m_velocity.x = -m_velocity.x;
+	}
+	// Flip Y velocity
+	if (flipY) {
+		m_velocity.y = -m_velocity.y;
+	}
+	// Wait to adjust rotation until next frame
+	if (flipX || flipY) {
+		auto preangle = (float) atan2(pre.x, pre.y);
+		auto postangle = (float) atan2(m_velocity.x, m_velocity.y);
+		m_update_rotation = motion.radians + postangle - preangle;
+	}
+	return false;
+}
 
 vec2 Salmon::get_position() const
 {
@@ -439,22 +452,6 @@ const std::vector<vec2> &Salmon::getM_debug_vertices() const {
 }
 
 vec2 Salmon::get_bounding_box() const {
-	// TODO transform for scale, rotation?
-	// Uhh
-	float minX, minY = 99999;
-	float maxX, maxY = 0;
-	for (auto vertex : m_vertices) {
-		float x = vertex.position.x;
-		float y = vertex.position.y;
-		if (x < minX) minX = x;
-		if (x > maxX) maxX = x;
-		if (y < minY) minY = y;
-		if (y > maxY) maxY = y;
-	}
-
-	float width = maxX - minX;
-	float height = maxY - minY;
-
-	return { std::fabs(physics.scale.x) * width * 2, std::fabs(physics.scale.y) * height * 2};
+	return { std::fabs(physics.scale.x) * m_bbox.x * 2, std::fabs(physics.scale.y) * m_bbox.y * 2};
 }
 

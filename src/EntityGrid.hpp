@@ -87,6 +87,7 @@ private:
 
     // Grid vertices for drawing
     std::vector<Vertex> m_vertices;
+    std::vector<uint16_t> m_indices;
     // Draws square colors
     EntityGridSquare square;
     // Debugging function for printing node information

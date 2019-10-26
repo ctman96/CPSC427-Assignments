@@ -91,9 +91,18 @@ void Turtle::update(float ms)
         float ydif = dest.y - motion.position.y;
 
         if (std::abs(xdif) >= 1) {
-            motion.position.x += (xdif > 0) ? step : -1*step;
+			bool dif = (xdif > 0);
+			motion.position.x += dif ? step : -1*step;
+
+			// Remove node if moved past
+			float newxdif = dest.x - motion.position.x;
+			if (dif != (newxdif > 0)) m_path.erase(--m_path.end());
         } else if (std::abs(ydif) >= 1) {
-            motion.position.y += (ydif > 0) ? step : -1*step;
+			bool dif = (ydif > 0);
+			motion.position.y += dif ? step : -1*step;
+
+			float newydif = dest.y - motion.position.y;
+			if (dif != (newydif > 0)) m_path.erase(--m_path.end());
         } else {
             motion.position.x += -1 * step;
         }

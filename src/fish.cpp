@@ -86,30 +86,29 @@ void Fish::update(float ms)
 	if (!m_path.empty() && m_path.back().x > 32.f) {
 		vec2 dest = m_path.back();
 
-        //std::cout << motion.position.x << "," << motion.position.y << " -> " << dest.x << "," <<  dest.y << std::endl;
         float xdif=dest.x - motion.position.x;
         float ydif=dest.y - motion.position.y;
-        //std::cout << xdif << "," << ydif << std::endl;
-        /*
-		float rad = atan2(xdif, ydif);
-		float dx = step*sin(rad);
-		float dy = step*cos(rad);
-        std::cout << "("<<motion.position.x<<","<<motion.position.y<<")" << "("<<dest.x<<","<<dest.y<<")"  << "("<<dx<<","<<dy<<")"  << std::endl;
-        motion.position.x += dx;
-        motion.position.y += dy;
-         */
 
+        // Step in direction of the path node
 		if (std::abs(xdif) >= 1) {
-			motion.position.x += (xdif > 0) ? step : -1*step;
+		    bool dif = (xdif > 0);
+			motion.position.x += dif ? step : -1*step;
+
+			// Remove node if moved past
+			float newxdif = dest.x - motion.position.x;
+			if (dif != (newxdif > 0)) m_path.erase(--m_path.end());
+
 		} else if (std::abs(ydif) >= 1) {
-			motion.position.y += (ydif > 0) ? step : -1*step;
+            bool dif = (ydif > 0);
+			motion.position.y += dif ? step : -1*step;
+
+            float newydif = dest.y - motion.position.y;
+            if (dif != (newydif > 0)) m_path.erase(--m_path.end());
 		} else {
-            //std::cout << "normal step" << std::endl;
             motion.position.x += -1 * step;
 		}
-        //std::cout << motion.position.x << "," << motion.position.y << std::endl;
+
 	} else {
-        //std::cout << "normal step" << std::endl;
 		motion.position.x += -1 * step;
 	}
 

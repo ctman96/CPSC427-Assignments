@@ -57,22 +57,24 @@ public:
 
 	vec2 get_bounding_box() const;
 
+	const std::vector<vec2> &getM_debug_vertices() const;
+
 private:
 	float m_light_up_countdown_ms; // Used to keep track for how long the salmon should be lit up
 	bool m_is_alive; // True if the salmon is alive
 	vec2 m_velocity; // Velocity
 	float m_update_rotation;
+	vec2 m_bbox;
+
+	mat3 world_projection;
 
   	std::vector<Vertex> m_vertices;
 	std::vector<uint16_t> m_indices;
 
 	std::vector<vec2> m_debug_collision_points;
 	std::vector<vec2> m_debug_vertices;
-public:
-    const std::vector<vec2> &getM_debug_vertices() const;
-
-private:
 
     bool collides_with_exact(int left, int right, int top, int bottom);
+    bool collides_with_aabb(vec2 pos, vec2 box);
 	bool check_wall_collisions(vec2 screen);
 };

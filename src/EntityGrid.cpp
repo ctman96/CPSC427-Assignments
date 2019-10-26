@@ -12,6 +12,7 @@
 // Initialization, generate grid
 bool EntityGrid::init(int width, int height, int size) {
     m_vertices.clear();
+    m_indices.clear();
 
     // Calculate grid size
     gridW = (int)std::ceil((float)width / (float)size);
@@ -38,21 +39,21 @@ bool EntityGrid::init(int width, int height, int size) {
 
 
     // Generate Grid indices
-    uint16_t indices[((gridW+1) * gridH * 2) + ((gridH+1) * gridW * 2)];
-    int ind = 0;
+    //uint16_t indices[((gridW+1) * gridH * 2) + ((gridH+1) * gridW * 2)];
+    //int ind = 0;
 
     // Vertical grid lines
     for(int x = 0; x < gridW + 1; x++) {
         for(int y = 0; y < gridH; y++) {
-            indices[ind++] = x * (gridH+1) + y;
-            indices[ind++] = x * (gridH+1) + y+1;
+            m_indices.emplace_back(x * (gridH+1) + y);
+            m_indices.emplace_back(x * (gridH+1) + y+1);
         }
     }
     // Horizontal grid lines
     for(int y = 0; y < gridH+1; y++) {
         for(int x = 0; x < gridW; x++) {
-            indices[ind++] = x * (gridH+1) + y;
-            indices[ind++] = (x + 1) * (gridH+1) + y;
+            m_indices.emplace_back(x * (gridH+1) + y);
+            m_indices.emplace_back((x + 1) * (gridH+1) + y);
         }
     }
 
@@ -68,7 +69,7 @@ bool EntityGrid::init(int width, int height, int size) {
     // Index Buffer creation
     glGenBuffers(1, &mesh.ibo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.ibo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * ind, indices, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * m_indices.size(), m_indices.data(), GL_STATIC_DRAW);
 
     // Vertex Array (Container for Vertex + Index buffer)
     //glGenVertexArrays(1, &mesh.vao);
@@ -86,7 +87,7 @@ bool EntityGrid::init(int width, int height, int size) {
 void EntityGrid::destroy() {
     glDeleteBuffers(1, &mesh.vbo);
     glDeleteBuffers(1, &mesh.ibo);
-    glDeleteBuffers(1, &mesh.vao);
+    //glDeleteBuffers(1, &mesh.vao);
 
     glDeleteShader(effect.vertex);
     glDeleteShader(effect.fragment);
@@ -196,8 +197,15 @@ void EntityGrid::draw(const mat3 &projection) {
     glUniform3fv(color_uloc, 1, color);
     glUniformMatrix3fv(projection_uloc, 1, GL_FALSE, (float*)&projection);
 
+    // Get number of infices from buffer,
+    // we know our vbo contains both colour and position information, so...
+    GLint size = 0;
+    glBindBuffer(GL_ARRAY_BUFFER, mesh.vbo);
+    glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
+    GLsizei num_indices = size / sizeof(uint16_t);
+
     // Drawing!
-    glDrawElements(GL_LINES, ((gridW+1) * gridH * 2) + ((gridH+1) * gridW * 2), GL_UNSIGNED_SHORT, nullptr);
+    glDrawElements(GL_LINES, num_indices, GL_UNSIGNED_SHORT, nullptr); // TODO crashing here, segfault???
 
     // Draw grid square colors
     for (int i=0; i < gridW; ++i) {
@@ -239,7 +247,7 @@ std::vector<vec2> EntityGrid::getPath(const Turtle &turtle, const Salmon &salmon
     auto sy = (int)std::floor((spos.y) / (float)size);
     pair s = { sx, sy };
 
-    return search(tpos, tbox, {}, &isDestTurtle, &turtleH, s);
+    return search(tpos, tbox, {EType::goal}, &isDestTurtle, &turtleH, s);
 }
 
 // Debug printing node details
@@ -417,7 +425,7 @@ std::vector<vec2> EntityGrid::search(vec2 position, vec2 bbox, const std::vector
 
                 // Calculate new F value
                 float newG = node.g + 1.f; // Since we're only moving in cardinal directions, just increment G
-                float newH = hfn(grid, {adjX, adjY}, {-1,-1}); // heuristic = straight line distance to the edge of map, admissible // TODO generalize heuristic function
+                float newH = hfn(grid, {adjX, adjY}, {dest.x,dest.y});
                 float newF = newG + newH;
 
 

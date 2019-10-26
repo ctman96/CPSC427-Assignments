@@ -10,7 +10,7 @@
 // Same as static in c, local to compilation unit
 namespace
 {
-	const size_t MAX_TURTLES = 2;
+	const size_t MAX_TURTLES = 0;
 	const size_t MAX_FISH = 5;
 	const size_t TURTLE_DELAY_MS = 4000;
 	const size_t FISH_DELAY_MS = 10000;
@@ -129,6 +129,8 @@ bool World::init(vec2 screen)
 
 	m_current_speed = 1.f;
 	m_debug = false;
+	m_frame = 0;
+	m_path_update_frame = 1;
 
 	return m_salmon.init() && m_water.init() && m_pebbles_emitter.init() && m_debug_view.init(screen) && aiGrid.init(screen.x, screen.y, 32);
 }
@@ -166,9 +168,6 @@ void World::destroy()
 // Update our game world
 bool World::update(float elapsed_ms)
 {
-	m_freeze_timer < 0 ? m_freeze_timer = 0 : m_freeze_timer -= elapsed_ms;
-	if (m_freeze_timer > 0) return true;
-
 	if (keyMap[GLFW_KEY_A]) {
 		m_debug = true;
 		m_water.setDistort(false);
@@ -177,6 +176,18 @@ bool World::update(float elapsed_ms)
 		m_debug = false;
 		m_water.setDistort(true);
 	}
+	if (keyMap[GLFW_KEY_MINUS]) {
+		m_path_update_frame--;
+		if (m_path_update_frame < 1) m_path_update_frame = 1;
+	}
+	if (keyMap[GLFW_KEY_EQUAL]) {
+		m_path_update_frame++;
+	}
+
+    m_frame = ++m_frame % m_path_update_frame;
+
+	m_freeze_timer < 0 ? m_freeze_timer = 0 : m_freeze_timer -= elapsed_ms;
+	if (m_freeze_timer > 0) return true;
 
 	aiGrid.clear();
 	aiGrid.addToGrid(m_salmon);
@@ -245,12 +256,15 @@ bool World::update(float elapsed_ms)
 	// Updating all entities, making the turtle and fish
 	// faster based on current
 	m_salmon.update(elapsed_ms, keyMap, mouse_position, screen);
+
+
+    // ser-controlled number of frames between path calculation
 	for (auto& turtle : m_turtles) {
-		turtle.setM_path(aiGrid.getPath(turtle, m_salmon));
+		if (m_frame == 0) turtle.setM_path(aiGrid.getPath(turtle, m_salmon));
         turtle.update(elapsed_ms * m_current_speed);
 	}
 	for (auto& fish : m_fish) {
-		fish.setM_path(aiGrid.getPath(fish));
+		if (m_frame == 0) fish.setM_path(aiGrid.getPath(fish));
 		fish.update(elapsed_ms * m_current_speed);
 	}
 	for (auto& bullet : m_bullets)
@@ -343,6 +357,12 @@ bool World::update(float elapsed_ms)
 	// If salmon is dead, restart the game after the fading animation
 	if (!m_salmon.is_alive() &&
 		m_water.get_salmon_dead_time() > 5) {
+		int w, h;
+		glfwGetFramebufferSize(m_window, &w, &h);
+		vec2 screen = { (float)w / m_screen_scale, (float)h / m_screen_scale };
+		aiGrid.clear();
+		m_debug_view.destroy();
+		m_debug_view.init(screen);
 		m_salmon.destroy();
 		m_salmon.init();
 		m_pebbles_emitter.destroy();
@@ -352,6 +372,8 @@ bool World::update(float elapsed_ms)
 		m_bullets.clear();
 		m_water.reset_salmon_dead_time();
 		m_current_speed = 1.f;
+		aiGrid.destroy();
+		aiGrid.init(screen.x, screen.y, 32);
 	}
 	return true;
 }
@@ -416,7 +438,8 @@ void World::draw()
 		fish.draw(projection_2D);
 	for (auto& bullet : m_bullets)
 	    bullet.draw(projection_2D);
-	m_salmon.draw(projection_2D);
+	if(!m_debug)
+		m_salmon.draw(projection_2D);
 
 	/////////////////////
 	// Truely render to the screen
@@ -434,7 +457,6 @@ void World::draw()
 	glBindTexture(GL_TEXTURE_2D, m_screen_tex.id);
 
 	m_water.draw(projection_2D);
-	// TODO some way to disable water shader?
 
 
 	if (m_debug) {
@@ -508,15 +530,22 @@ void World::on_key(GLFWwindow*, int key, int, int action, int mod)
 	if (action == GLFW_RELEASE && key == GLFW_KEY_R)
 	{
 		int w, h;
-		glfwGetWindowSize(m_window, &w, &h);
+		glfwGetFramebufferSize(m_window, &w, &h);
+		vec2 screen = { (float)w / m_screen_scale, (float)h / m_screen_scale };
+		aiGrid.clear();
+		m_debug_view.destroy();
+		m_debug_view.init(screen);
 		m_salmon.destroy(); 
 		m_salmon.init();
 		m_pebbles_emitter.destroy();
 		m_pebbles_emitter.init();
 		m_turtles.clear();
 		m_fish.clear();
+		m_bullets.clear();
 		m_water.reset_salmon_dead_time();
 		m_current_speed = 1.f;
+		aiGrid.destroy();
+		aiGrid.init(screen.x, screen.y, 32);
 	}
 
 	// Control the current speed with `<` `>`

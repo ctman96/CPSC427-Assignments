@@ -65,6 +65,7 @@ private:
 	// Window handle
 	GLFWwindow* m_window;
 	float m_screen_scale; // Screen to pixel coordinates scale factor
+	int m_frame;
 
 	// Screen texture
 	// The draw loop first renders to this texture, then it is used for the water shader
@@ -106,6 +107,7 @@ private:
 	EntityGrid aiGrid;
 	bool m_debug;
     DebugView m_debug_view;
+    int m_path_update_frame;
 
 	float m_freeze_timer;
 };
