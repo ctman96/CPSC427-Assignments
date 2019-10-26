@@ -75,13 +75,14 @@ bool Salmon::init()
 	
 	// Setting initial values
 	motion.position = { 300.f, 500.f };
-	motion.radians = 0.f;
+	motion.radians = 1.57f;
 	motion.speed = 100.f;
 
 	physics.scale = { -35.f, 35.f };
 
 	m_is_alive = true;
 	m_light_up_countdown_ms = -1.f;
+	m_update_rotation = std::numeric_limits<float>::max();
 
 	return true;
 }
@@ -105,10 +106,9 @@ void Salmon::update(float ms, std::map<int, bool> &keyMap, vec2 mouse_position, 
 	if (m_is_alive)
 	{
 	    // Delay changing rotation after a collision
-		// TODO: This doesn't work for backwards collisions, do something with trig to get the collision angle
-	    if (m_update_rotation) {
-            set_rotation(atan2(m_velocity.x, m_velocity.y));
-            m_update_rotation = false;
+	    if (m_update_rotation != std::numeric_limits<float>::max()) {
+            set_rotation(m_update_rotation);
+            m_update_rotation = std::numeric_limits<float>::max();
 	    }
 
 		float accelX = 0.f;
@@ -217,6 +217,7 @@ bool Salmon::check_wall_collisions(vec2 screen) {
         // Add all vertices to vertex list
         m_debug_vertices.emplace_back(vec2{pos.x, pos.y});
     }
+    vec2 pre = m_velocity;
     // Flip x velocity
     if (flipX) {
         m_velocity.x = -m_velocity.x;
@@ -227,7 +228,9 @@ bool Salmon::check_wall_collisions(vec2 screen) {
     }
     // Wait to adjust rotation until next frame
     if (flipX || flipY) {
-		m_update_rotation = true;
+		auto preangle = (float) atan2(pre.x, pre.y);
+		auto postangle = (float) atan2(m_velocity.x, m_velocity.y);
+    	m_update_rotation = motion.radians + postangle - preangle;
 	}
     return false;
 }

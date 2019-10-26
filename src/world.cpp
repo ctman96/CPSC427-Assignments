@@ -159,7 +159,7 @@ void World::destroy()
 	m_fish.clear();
 	m_bullets.clear();
 	m_debug_view.destroy();
-	// TODO cleanup new debug/ai stuff
+	aiGrid.destroy();
 	glfwDestroyWindow(m_window);
 }
 
