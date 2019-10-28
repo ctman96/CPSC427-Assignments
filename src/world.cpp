@@ -527,6 +527,10 @@ void World::on_key(GLFWwindow*, int key, int, int action, int mod)
 
 	(action == GLFW_PRESS || action == GLFW_REPEAT) ? keyMap[key] = true : keyMap[key] = false;
 
+	if (action == GLFW_RELEASE && key == GLFW_KEY_D) {
+		m_salmon.toggleM_auto();
+	}
+
 	// Resetting game
 	if (action == GLFW_RELEASE && key == GLFW_KEY_R)
 	{

@@ -260,26 +260,46 @@ float salmonH(const std::vector<std::vector<EType>>& grid, pair pos, pair dest) 
     return (float)(std::sqrt(std::pow((pos.x - dest.x), 2) + std::pow((pos.y - dest.y), 2) ));
 }
 
+// bit hacky, but I check for clearance of 4 squares, and add some squares for the boundary
+bool isDestSalmonAlt(const std::vector<std::vector<EType>>& grid, pair pos, pair dest) {
+    int clearN = 6;
+    int clearBoundL = std::max((pos.x - clearN), 3);
+    int clearBoundR = std::min((pos.x + clearN), (int)grid[0].size() - 3);
+    int clearBoundT = std::max((pos.y - clearN), 3);
+    int clearBoundB = std::min((pos.y + clearN), (int)grid.size() - 3);
+    for (int clearX = clearBoundL; clearX < clearBoundR; clearX++) {
+        for (int clearY = clearBoundT; clearY < clearBoundB; clearY++) {
+            if (grid[clearX][clearY] == EType::enemy) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 std::vector<vec2> EntityGrid::getPath(const Salmon &salmon, const std::vector<Fish> &fishes) {
     vec2 spos = salmon.get_position();
     vec2 sbox = salmon.get_bounding_box();
 
     // Find closest fish for heuristic
-    if (fishes.empty()) return std::vector<vec2>();
-    vec2 fpos = {std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
-    float mindist = std::numeric_limits<float>::max();
-    for (const auto &fish : fishes) {
-        float dist = (float)sqrt(pow(fish.get_position().x - spos.x, 2) + pow(fish.get_position().y - spos.y, 2));
-        if (dist < mindist) {
-            fpos = fish.get_position();
-            mindist = dist;
+    if (!fishes.empty()) {
+        vec2 fpos = {std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
+        float mindist = std::numeric_limits<float>::max();
+        for (const auto &fish : fishes) {
+            float dist = (float)sqrt(pow(fish.get_position().x - spos.x, 2) + pow(fish.get_position().y - spos.y, 2));
+            if (dist < mindist) {
+                fpos = fish.get_position();
+                mindist = dist;
+            }
         }
-    }
-    auto fx = (int)std::floor((fpos.x) / (float)size);
-    auto fy = (int)std::floor((fpos.y) / (float)size);
-    pair f = { fx, fy };
+        auto fx = (int)std::floor((fpos.x) / (float)size);
+        auto fy = (int)std::floor((fpos.y) / (float)size);
+        pair f = { fx, fy };
 
-    return search(spos, sbox, {EType::enemy}, &isDestSalmon, &salmonH, f);
+        return search(spos, sbox, {EType::enemy}, &isDestSalmon, &salmonH, f);
+    } else {
+        return search(spos, sbox, {EType::enemy}, &isDestSalmonAlt, &salmonH, {0, 0}); // TODO dest, heuristic
+    }
 }
 
 
@@ -460,6 +480,7 @@ std::vector<vec2> EntityGrid::search(vec2 position, vec2 bbox, const std::vector
                 float newG = node.g + 1.f; // Since we're only moving in cardinal directions, just increment G
                 float newH = hfn(grid, {adjX, adjY}, {dest.x,dest.y});
                 float newF = newG + newH;
+                //if (!clear) newF += 100;
 
 
                 if (DEBUG_LOG)std::cout << "new(f="<<newF<<",g="<<newG<<",h="<<newH<<"), old(f="<<map[adjX][adjY].f<<",g="<<map[adjX][adjY].g<<",h="<<map[adjX][adjY].h<<")"<< std::endl;

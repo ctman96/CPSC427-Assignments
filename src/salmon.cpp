@@ -74,13 +74,14 @@ bool Salmon::init()
 		return false;
 	
 	// Setting initial values
-	motion.position = { 300.f, 500.f };
+	motion.position = { 200.f, 400.f };
 	motion.radians = 1.57f;
 	motion.speed = 100.f;
 
 	physics.scale = { -35.f, 35.f };
 
 	m_is_alive = true;
+	m_auto = false;
 	m_light_up_countdown_ms = -1.f;
 	m_update_rotation = std::numeric_limits<float>::max();
 
@@ -141,27 +142,36 @@ void Salmon::update(float ms, std::map<int, bool> &keyMap, vec2 mouse_position, 
             m_update_rotation = std::numeric_limits<float>::max();
 	    }
 
-	    // TODO differences between player and enemy salmon? Or just provide optimal route to player?
 
 		float accelX = 0.f;
 		float accelY = 0.f;
 
-		// Move along direction
-		if (keyMap[GLFW_KEY_UP]) {
-			accelX = 2 * sin(motion.radians);
-			accelY = 2 * cos(motion.radians);
-		}
-		if (keyMap[GLFW_KEY_DOWN]) {
-			accelX = -2 * sin(motion.radians);
-			accelY = -2 * cos(motion.radians);
-		}
+		if (!m_auto) {
+            // Move along direction
+            if (keyMap[GLFW_KEY_UP]) {
+                accelX = 2.f * (float)sin(motion.radians);
+                accelY = 2.f * (float)cos(motion.radians);
+            }
+            if (keyMap[GLFW_KEY_DOWN]) {
+                accelX = -2.f * (float)sin(motion.radians);
+                accelY = -2.f * (float)cos(motion.radians);
+            }
 
-		// Rotate
-		if (keyMap [GLFW_KEY_LEFT]) {
-			motion.radians -= step / 20;
-		}
-		if (keyMap [GLFW_KEY_RIGHT]) {
-			motion.radians += step / 20;
+            // Rotate
+            if (keyMap [GLFW_KEY_LEFT]) {
+                motion.radians += step / 20;
+            }
+            if (keyMap [GLFW_KEY_RIGHT]) {
+                motion.radians -= step / 20;
+            }
+		} else {
+		    // AI path movement
+		    if (!m_path.empty() && m_path.back().x > 32.f) {
+                vec2 dest = m_path.back();
+		        motion.radians = (float)atan2(dest.x - motion.position.x, dest.y - motion.position.y);
+                accelX = (float)sin(motion.radians);
+                accelY = (float)cos(motion.radians);
+		    }
 		}
 
         accelerate(accelX,accelY);
@@ -454,5 +464,9 @@ const std::vector<vec2> &Salmon::getM_path() const {
 
 void Salmon::setM_path(const std::vector<vec2> &m_path) {
 	Salmon::m_path = m_path;
+}
+
+void Salmon::toggleM_auto() {
+	m_auto = !m_auto;
 }
 
