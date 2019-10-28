@@ -71,6 +71,21 @@ void Pebbles::update(float ms) {
 	// You will need to handle both the motion of pebbles 
 	// and the removal of dead pebbles.
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	auto it = m_pebbles.begin();
+	while (it != m_pebbles.end()) {
+		// Delete dead pebbles
+		(*it).life--;
+		if ((*it).life <= 0.f) {
+			it = m_pebbles.erase(it);
+			continue;
+		}
+		// TODO physics
+
+		// Move
+		(*it).position = add((*it).position, (*it).velocity);
+
+		it++;
+	}
 }
 
 void Pebbles::spawn_pebble(vec2 position) 
@@ -78,6 +93,12 @@ void Pebbles::spawn_pebble(vec2 position)
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	// HANDLE PEBBLE SPAWNING HERE
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	Pebble pebble;
+	pebble.position = position;
+	pebble.velocity = {1.f,1.f}; // TODO
+	pebble.radius = 10.f; // TODO
+	pebble.life = 1000; // TODO
+	m_pebbles.emplace_back(pebble);
 }
 
 void Pebbles::collides_with() 
@@ -88,6 +109,10 @@ void Pebbles::collides_with()
 	// Make sure to handle both collisions between pebbles
 	// and collisions between pebbles and salmon/fish/turtles.
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+	// TODO: For each pebble:
+	// TODO: Similar to old collides_with functions, with approximate radius checking?
+	// TODO: Or is radius essentially the scaleX and scaleY values, and do exact vertex checking?
 }
 
 // Draw pebbles using instancing

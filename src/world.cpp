@@ -274,6 +274,10 @@ bool World::update(float elapsed_ms)
 	// HANDLE PEBBLE SPAWN/UPDATES HERE
 	// DON'T WORRY ABOUT THIS UNTIL ASSIGNMENT 3
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	if (keyMap[GLFW_KEY_RIGHT_SHIFT]) {
+		m_pebbles_emitter.spawn_pebble(m_salmon.get_position());
+	}
+	m_pebbles_emitter.update(elapsed_ms * m_current_speed);
 
 	// Removing out of screen turtles
 	auto turtle_it = m_turtles.begin();
@@ -432,6 +436,7 @@ void World::draw()
 	// Drawing entities
 	if (m_debug)
 		aiGrid.draw(projection_2D);
+	m_pebbles_emitter.draw(projection_2D);
 	for (auto& turtle : m_turtles)
 		turtle.draw(projection_2D);
 	for (auto& fish : m_fish)
