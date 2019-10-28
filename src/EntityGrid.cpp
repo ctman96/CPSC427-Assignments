@@ -238,6 +238,7 @@ float turtleH(const std::vector<std::vector<EType>>& grid, pair pos, pair dest) 
     // Direct distance to player - admissible
     return (float)(std::sqrt(std::pow((pos.x - dest.x), 2) + std::pow((pos.y - dest.y), 2) ));
 }
+
 std::vector<vec2> EntityGrid::getPath(const Turtle &turtle, const Salmon &salmon) {
     vec2 tpos = turtle.get_position();
     vec2 tbox = turtle.get_bounding_box();
@@ -249,6 +250,38 @@ std::vector<vec2> EntityGrid::getPath(const Turtle &turtle, const Salmon &salmon
 
     return search(tpos, tbox, {EType::goal}, &isDestTurtle, &turtleH, s);
 }
+
+
+bool isDestSalmon(const std::vector<std::vector<EType>>& grid, pair pos, pair dest) {
+    return grid[pos.x][pos.y] == EType::goal;
+}
+float salmonH(const std::vector<std::vector<EType>>& grid, pair pos, pair dest) {
+    // Direct distance to closest fish - admissible?
+    return (float)(std::sqrt(std::pow((pos.x - dest.x), 2) + std::pow((pos.y - dest.y), 2) ));
+}
+
+std::vector<vec2> EntityGrid::getPath(const Salmon &salmon, const std::vector<Fish> &fishes) {
+    vec2 spos = salmon.get_position();
+    vec2 sbox = salmon.get_bounding_box();
+
+    // Find closest fish for heuristic
+    if (fishes.empty()) return std::vector<vec2>();
+    vec2 fpos = {std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
+    float mindist = std::numeric_limits<float>::max();
+    for (const auto &fish : fishes) {
+        float dist = (float)sqrt(pow(fish.get_position().x - spos.x, 2) + pow(fish.get_position().y - spos.y, 2));
+        if (dist < mindist) {
+            fpos = fish.get_position();
+            mindist = dist;
+        }
+    }
+    auto fx = (int)std::floor((fpos.x) / (float)size);
+    auto fy = (int)std::floor((fpos.y) / (float)size);
+    pair f = { fx, fy };
+
+    return search(spos, sbox, {EType::enemy}, &isDestSalmon, &salmonH, f);
+}
+
 
 // Debug printing node details
 void EntityGrid::printNode(Node node) {

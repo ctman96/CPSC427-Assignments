@@ -59,14 +59,17 @@ public:
 
 	const std::vector<vec2> &getM_debug_vertices() const;
 
+	const std::vector<vec2> &getM_path() const;
+
+	void setM_path(const std::vector<vec2> &m_path);
+
 private:
 	float m_light_up_countdown_ms; // Used to keep track for how long the salmon should be lit up
 	bool m_is_alive; // True if the salmon is alive
 	vec2 m_velocity; // Velocity
 	float m_update_rotation;
 	vec2 m_bbox;
-
-	mat3 world_projection;
+	std::vector<vec2> m_path;
 
   	std::vector<Vertex> m_vertices;
 	std::vector<uint16_t> m_indices;

@@ -128,14 +128,6 @@ void Salmon::update(float ms, std::map<int, bool> &keyMap, vec2 mouse_position, 
 	transform.end();
 	m_debug_vertices.clear();
 	for(auto vertex : m_vertices) {
-		// TODO ??? vertices are offset the further away from the center of screen you are.
-		// mul(mul(world_projection, transform.out), vec3{vertex.position.x, vertex.position.y, 1.0})
-		// mul(mul(transform.out, world_projection), vec3{vertex.position.x, vertex.position.y, 1.0})
-		//std::cout << world_projection.c0.x << "," << world_projection.c0.y << "," << world_projection.c0.z << std::endl;
-		//std::cout << world_projection.c1.x << "," << world_projection.c1.y << "," << world_projection.c1.z << std::endl;
-		//std::cout << world_projection.c2.x << "," << world_projection.c2.y << "," << world_projection.c2.z << std::endl << std::endl;
-		// TODO maybe try using just passing the basic vertices into debugDot, and providing the transformation matrix to it's shader?
-
 		vec3 pos = mul(transform.out, vec3{vertex.position.x, vertex.position.y, 1.0});
 		m_debug_vertices.emplace_back(vec2{pos.x, pos.y});
 	}
@@ -148,6 +140,8 @@ void Salmon::update(float ms, std::map<int, bool> &keyMap, vec2 mouse_position, 
             set_rotation(m_update_rotation);
             m_update_rotation = std::numeric_limits<float>::max();
 	    }
+
+	    // TODO differences between player and enemy salmon? Or just provide optimal route to player?
 
 		float accelX = 0.f;
 		float accelY = 0.f;
@@ -204,7 +198,6 @@ void Salmon::update(float ms, std::map<int, bool> &keyMap, vec2 mouse_position, 
 
 void Salmon::draw(const mat3& projection)
 {
-	world_projection = projection;
 	transform.begin();
 	transform.translate({motion.position.x, motion.position.y });
     transform.scale(physics.scale);
@@ -453,5 +446,13 @@ const std::vector<vec2> &Salmon::getM_debug_vertices() const {
 
 vec2 Salmon::get_bounding_box() const {
 	return { std::fabs(physics.scale.x) * m_bbox.x * 2, std::fabs(physics.scale.y) * m_bbox.y * 2};
+}
+
+const std::vector<vec2> &Salmon::getM_path() const {
+	return m_path;
+}
+
+void Salmon::setM_path(const std::vector<vec2> &m_path) {
+	Salmon::m_path = m_path;
 }
 

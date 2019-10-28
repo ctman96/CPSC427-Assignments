@@ -255,6 +255,7 @@ bool World::update(float elapsed_ms)
 	
 	// Updating all entities, making the turtle and fish
 	// faster based on current
+	if (m_frame == 0) m_salmon.setM_path(aiGrid.getPath(m_salmon, m_fish));
 	m_salmon.update(elapsed_ms, keyMap, mouse_position, screen);
 
 
