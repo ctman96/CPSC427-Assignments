@@ -76,6 +76,8 @@ public:
     std::vector<vec2> getPath(const Fish& fish);
     // Find path for turtle to player
     std::vector<vec2> getPath(const Turtle& turtle, const Salmon& salmon);
+    // Find path from salmon to fish
+    std::vector<vec2> getPath(const Salmon& salmon, const std::vector<Fish>& fishes);
 private:
     std::vector<std::vector<EType>> grid;
     // How many squares wide

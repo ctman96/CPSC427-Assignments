@@ -33,6 +33,10 @@ void DebugView::draw(const mat3 &projection, Salmon *salmon, const std::vector<F
     for(auto dot : salmon->getM_debug_collision_points()) {
         debugDot.draw(projection, { 1.f, 0.2f, 0.2f }, dot, 0.785f, {0.6f,0.6f});
     }
+    // Salmon dots
+    for(auto dot : salmon->getM_path()){
+        debugDot.draw(projection, {0.5f,0.5f,0.5f}, dot);
+    }
     // Fish dots
     for (const auto &fish : *fishes) {
         for(auto dot : fish.getM_path()){

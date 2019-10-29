@@ -74,13 +74,14 @@ bool Salmon::init()
 		return false;
 	
 	// Setting initial values
-	motion.position = { 300.f, 500.f };
+	motion.position = { 200.f, 400.f };
 	motion.radians = 1.57f;
 	motion.speed = 100.f;
 
 	physics.scale = { -35.f, 35.f };
 
 	m_is_alive = true;
+	m_auto = false;
 	m_light_up_countdown_ms = -1.f;
 	m_update_rotation = std::numeric_limits<float>::max();
 
@@ -127,18 +128,6 @@ void Salmon::update(float ms, std::map<int, bool> &keyMap, vec2 mouse_position, 
 	transform.rotate(motion.radians - 3.14f/2);
 	transform.end();
 	m_debug_vertices.clear();
-	for(auto vertex : m_vertices) {
-		// TODO ??? vertices are offset the further away from the center of screen you are.
-		// mul(mul(world_projection, transform.out), vec3{vertex.position.x, vertex.position.y, 1.0})
-		// mul(mul(transform.out, world_projection), vec3{vertex.position.x, vertex.position.y, 1.0})
-		//std::cout << world_projection.c0.x << "," << world_projection.c0.y << "," << world_projection.c0.z << std::endl;
-		//std::cout << world_projection.c1.x << "," << world_projection.c1.y << "," << world_projection.c1.z << std::endl;
-		//std::cout << world_projection.c2.x << "," << world_projection.c2.y << "," << world_projection.c2.z << std::endl << std::endl;
-		// TODO maybe try using just passing the basic vertices into debugDot, and providing the transformation matrix to it's shader?
-
-		vec3 pos = mul(transform.out, vec3{vertex.position.x, vertex.position.y, 1.0});
-		m_debug_vertices.emplace_back(vec2{pos.x, pos.y});
-	}
 
 	float step = motion.speed * (ms / 1000);
 	if (m_is_alive)
@@ -149,25 +138,36 @@ void Salmon::update(float ms, std::map<int, bool> &keyMap, vec2 mouse_position, 
             m_update_rotation = std::numeric_limits<float>::max();
 	    }
 
+
 		float accelX = 0.f;
 		float accelY = 0.f;
 
-		// Move along direction
-		if (keyMap[GLFW_KEY_UP]) {
-			accelX = 2 * sin(motion.radians);
-			accelY = 2 * cos(motion.radians);
-		}
-		if (keyMap[GLFW_KEY_DOWN]) {
-			accelX = -2 * sin(motion.radians);
-			accelY = -2 * cos(motion.radians);
-		}
+		if (!m_auto) {
+            // Move along direction
+            if (keyMap[GLFW_KEY_UP]) {
+                accelX = 2.f * (float)sin(motion.radians);
+                accelY = 2.f * (float)cos(motion.radians);
+            }
+            if (keyMap[GLFW_KEY_DOWN]) {
+                accelX = -2.f * (float)sin(motion.radians);
+                accelY = -2.f * (float)cos(motion.radians);
+            }
 
-		// Rotate
-		if (keyMap [GLFW_KEY_LEFT]) {
-			motion.radians -= step / 20;
-		}
-		if (keyMap [GLFW_KEY_RIGHT]) {
-			motion.radians += step / 20;
+            // Rotate
+            if (keyMap [GLFW_KEY_LEFT]) {
+                motion.radians += step / 20;
+            }
+            if (keyMap [GLFW_KEY_RIGHT]) {
+                motion.radians -= step / 20;
+            }
+		} else {
+		    // AI path movement
+		    if (!m_path.empty() && m_path.back().x > 32.f) {
+                vec2 dest = m_path.back();
+		        motion.radians = (float)atan2(dest.x - motion.position.x, dest.y - motion.position.y);
+                accelX = (float)sin(motion.radians);
+                accelY = (float)cos(motion.radians);
+		    }
 		}
 
         accelerate(accelX,accelY);
@@ -198,13 +198,17 @@ void Salmon::update(float ms, std::map<int, bool> &keyMap, vec2 mouse_position, 
 		move({ 0.f, step });
 	}
 
+    for(auto vertex : m_vertices) {
+        vec3 pos = mul(transform.out, vec3{vertex.position.x, vertex.position.y, 1.0});
+        m_debug_vertices.emplace_back(vec2{pos.x, pos.y});
+    }
+
 	if (m_light_up_countdown_ms > 0.f)
 		m_light_up_countdown_ms -= ms;
 }
 
 void Salmon::draw(const mat3& projection)
 {
-	world_projection = projection;
 	transform.begin();
 	transform.translate({motion.position.x, motion.position.y });
     transform.scale(physics.scale);
@@ -453,5 +457,17 @@ const std::vector<vec2> &Salmon::getM_debug_vertices() const {
 
 vec2 Salmon::get_bounding_box() const {
 	return { std::fabs(physics.scale.x) * m_bbox.x * 2, std::fabs(physics.scale.y) * m_bbox.y * 2};
+}
+
+const std::vector<vec2> &Salmon::getM_path() const {
+	return m_path;
+}
+
+void Salmon::setM_path(const std::vector<vec2> &m_path) {
+	Salmon::m_path = m_path;
+}
+
+void Salmon::toggleM_auto() {
+	m_auto = !m_auto;
 }
 

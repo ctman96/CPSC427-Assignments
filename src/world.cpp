@@ -255,6 +255,7 @@ bool World::update(float elapsed_ms)
 	
 	// Updating all entities, making the turtle and fish
 	// faster based on current
+	if (m_frame == 0) m_salmon.setM_path(aiGrid.getPath(m_salmon, m_fish));
 	m_salmon.update(elapsed_ms, keyMap, mouse_position, screen);
 
 
@@ -530,6 +531,10 @@ void World::on_key(GLFWwindow*, int key, int, int action, int mod)
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 	(action == GLFW_PRESS || action == GLFW_REPEAT) ? keyMap[key] = true : keyMap[key] = false;
+
+	if (action == GLFW_RELEASE && key == GLFW_KEY_D) {
+		m_salmon.toggleM_auto();
+	}
 
 	// Resetting game
 	if (action == GLFW_RELEASE && key == GLFW_KEY_R)
