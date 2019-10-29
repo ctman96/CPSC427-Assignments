@@ -128,10 +128,6 @@ void Salmon::update(float ms, std::map<int, bool> &keyMap, vec2 mouse_position, 
 	transform.rotate(motion.radians - 3.14f/2);
 	transform.end();
 	m_debug_vertices.clear();
-	for(auto vertex : m_vertices) {
-		vec3 pos = mul(transform.out, vec3{vertex.position.x, vertex.position.y, 1.0});
-		m_debug_vertices.emplace_back(vec2{pos.x, pos.y});
-	}
 
 	float step = motion.speed * (ms / 1000);
 	if (m_is_alive)
@@ -201,6 +197,11 @@ void Salmon::update(float ms, std::map<int, bool> &keyMap, vec2 mouse_position, 
 		set_rotation(3.1415f);
 		move({ 0.f, step });
 	}
+
+    for(auto vertex : m_vertices) {
+        vec3 pos = mul(transform.out, vec3{vertex.position.x, vertex.position.y, 1.0});
+        m_debug_vertices.emplace_back(vec2{pos.x, pos.y});
+    }
 
 	if (m_light_up_countdown_ms > 0.f)
 		m_light_up_countdown_ms -= ms;

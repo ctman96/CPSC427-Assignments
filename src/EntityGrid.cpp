@@ -263,13 +263,15 @@ float salmonH(const std::vector<std::vector<EType>>& grid, pair pos, pair dest) 
 // bit hacky, but I check for clearance of 4 squares, and add some squares for the boundary
 bool isDestSalmonAlt(const std::vector<std::vector<EType>>& grid, pair pos, pair dest) {
     int clearN = 6;
-    int clearBoundL = std::max((pos.x - clearN), 3);
-    int clearBoundR = std::min((pos.x + clearN), (int)grid[0].size() - 3);
-    int clearBoundT = std::max((pos.y - clearN), 3);
-    int clearBoundB = std::min((pos.y + clearN), (int)grid.size() - 3);
+    int clearBoundL = std::max((pos.x - clearN), 0);
+    int clearBoundR = std::min((pos.x + clearN), (int)grid.size());
+    int clearBoundT = std::max((pos.y - clearN), 0);
+    int clearBoundB = std::min((pos.y + clearN), (int)grid[0].size());
     for (int clearX = clearBoundL; clearX < clearBoundR; clearX++) {
         for (int clearY = clearBoundT; clearY < clearBoundB; clearY++) {
             if (grid[clearX][clearY] == EType::enemy) {
+                return false;
+            } else if (clearX <= 5 || clearX >= grid.size() - 5 || clearY <= 5 || clearY >= grid[0].size() - 5) {
                 return false;
             }
         }
@@ -436,10 +438,10 @@ std::vector<vec2> EntityGrid::search(vec2 position, vec2 bbox, const std::vector
                     }
                 }
             }
-            if (!clear){
+            /*if (!clear){
                 if (DEBUG_LOG) std::cout << "Ignoring" << std::endl;
                 continue;
-            }
+            }*/
 
             // Check for destination
             if (isDest(grid, {adjX, adjY}, dest)) {
@@ -478,6 +480,7 @@ std::vector<vec2> EntityGrid::search(vec2 position, vec2 bbox, const std::vector
 
                 // Calculate new F value
                 float newG = node.g + 1.f; // Since we're only moving in cardinal directions, just increment G
+                if (!clear) newG += 100.f;
                 float newH = hfn(grid, {adjX, adjY}, {dest.x,dest.y});
                 float newF = newG + newH;
                 //if (!clear) newF += 100;
