@@ -15,6 +15,7 @@ namespace
 	const size_t TURTLE_DELAY_MS = 4000;
 	const size_t FISH_DELAY_MS = 10000;
 	const size_t BULLET_COOLDOWN_MS = 1000;
+	const size_t PEBBLE_COOLDOWN_MS = 250;
 
 	namespace
 	{
@@ -275,8 +276,11 @@ bool World::update(float elapsed_ms)
 	// HANDLE PEBBLE SPAWN/UPDATES HERE
 	// DON'T WORRY ABOUT THIS UNTIL ASSIGNMENT 3
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	if (keyMap[GLFW_KEY_RIGHT_SHIFT]) {
+    m_pebble_cooldown -= elapsed_ms * m_current_speed;
+	if (keyMap[GLFW_KEY_RIGHT_SHIFT] && m_pebble_cooldown < 0.f) {
+	    // TODO cooldown on pebble spawning
 		m_pebbles_emitter.spawn_pebble(m_salmon.get_position());
+		m_pebble_cooldown = PEBBLE_COOLDOWN_MS;
 	}
 	m_pebbles_emitter.update(elapsed_ms * m_current_speed);
 

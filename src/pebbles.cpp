@@ -95,9 +95,15 @@ void Pebbles::spawn_pebble(vec2 position)
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	Pebble pebble;
 	pebble.position = position;
-	pebble.velocity = {1.f,1.f}; // TODO
-	pebble.radius = 10.f; // TODO
-	pebble.life = 1000; // TODO
+
+	float randangle = (rand()%(360)) * M_PI / 80;
+	float randX = rand()%3+1;
+	float randY = rand()%3+1;
+	pebble.velocity.x = randX * cos(randangle);
+    pebble.velocity.y = randY * sin(randangle);
+
+	pebble.radius = rand()%(25-5 + 1) + 10.f;
+	pebble.life = 200;
 	m_pebbles.emplace_back(pebble);
 }
 

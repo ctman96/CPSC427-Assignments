@@ -95,6 +95,7 @@ private:
 	float m_next_turtle_spawn;
 	float m_next_fish_spawn;
     float m_bullet_cooldown;
+    float m_pebble_cooldown;
 	
 	Mix_Music* m_background_music;
 	Mix_Chunk* m_salmon_dead_sound;
