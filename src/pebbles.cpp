@@ -79,7 +79,15 @@ void Pebbles::update(float ms) {
 			it = m_pebbles.erase(it);
 			continue;
 		}
-		// TODO physics
+
+		// Add gravity acceleration
+		if ((*it).acceleration.y < 8){
+			float gravity = 0.001f * (*it).radius;
+			(*it).acceleration.y += gravity;
+		}
+
+		// Accelerate
+		(*it).velocity = add((*it).velocity, (*it).acceleration);
 
 		// Move
 		(*it).position = add((*it).position, (*it).velocity);
@@ -115,10 +123,37 @@ void Pebbles::collides_with()
 	// Make sure to handle both collisions between pebbles
 	// and collisions between pebbles and salmon/fish/turtles.
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	auto it = m_pebbles.begin();
+	while (it != m_pebbles.end()) {
+		// Check pebbles
+		auto pebit = m_pebbles.begin();
+		while (pebit != m_pebbles.end()) {
+			if (pebit == it)
+				continue;
 
+			// TODO simple radius check?
+		}
+	}
 	// TODO: For each pebble:
 	// TODO: Similar to old collides_with functions, with approximate radius checking?
 	// TODO: Or is radius essentially the scaleX and scaleY values, and do exact vertex checking?
+
+	/*
+	// Flip x velocity
+	if (flipX) {
+		m_velocity.x = -m_velocity.x;
+	}
+	// Flip Y velocity
+	if (flipY) {
+		m_velocity.y = -m_velocity.y;
+	}
+	// Wait to adjust rotation until next frame
+	if (flipX || flipY) {
+		auto preangle = (float) atan2(pre.x, pre.y);
+		auto postangle = (float) atan2(m_velocity.x, m_velocity.y);
+		m_update_rotation = motion.radians + postangle - preangle;
+	}
+ 	*/
 }
 
 // Draw pebbles using instancing

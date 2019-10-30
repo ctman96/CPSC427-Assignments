@@ -19,6 +19,7 @@ public:
 		float life = 0.0f; // remove pebble when its life reaches 0
 		vec2 position;
 		vec2 velocity;
+		vec2 acceleration;
 		float radius;
 	};
 
