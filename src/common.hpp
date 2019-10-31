@@ -24,6 +24,7 @@
 // If you want to do some overloads..
 struct vec2 { float x, y; };
 struct vec3 { float x, y, z; };
+struct vec4 { float x, y, z, w; };
 struct mat3 { vec3 c0, c1, c2; };
 
 // Utility functions

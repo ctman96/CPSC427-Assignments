@@ -103,12 +103,13 @@ bool Salmon::init()
 	float maxwh = std::max(width, height);
 	m_bbox = {maxwh, maxwh};
 
-	return true;
+	return outline_emitter.init(m_vertices);
 }
 
 // Releases all graphics resources
 void Salmon::destroy()
 {
+	outline_emitter.destroy();
 	glDeleteBuffers(1, &mesh.vbo);
 	glDeleteBuffers(1, &mesh.ibo);
 	glDeleteBuffers(1, &mesh.vao);
@@ -121,6 +122,9 @@ void Salmon::destroy()
 // Called on each frame by World::update()
 void Salmon::update(float ms, std::map<int, bool> &keyMap, vec2 mouse_position, vec2 screen)
 {
+	outline_emitter.update(ms);
+	outline_emitter.spawn_outline(motion.position, physics.scale, motion.radians - 3.14f/2);
+
 	// Add all vertices to debug_vertices
 	transform.begin();
 	transform.translate({motion.position.x, motion.position.y });
@@ -209,6 +213,8 @@ void Salmon::update(float ms, std::map<int, bool> &keyMap, vec2 mouse_position, 
 
 void Salmon::draw(const mat3& projection)
 {
+	outline_emitter.draw(projection);
+
 	transform.begin();
 	transform.translate({motion.position.x, motion.position.y });
     transform.scale(physics.scale);

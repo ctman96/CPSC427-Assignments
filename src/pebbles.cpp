@@ -76,7 +76,7 @@ void Pebbles::update(float ms) {
 	while (it != m_pebbles.end()) {
 		Pebble &pebble = (*it);
 		// Delete dead pebbles
-		pebble.life--;
+		pebble.life -= ms / 1000;
 		if (pebble.life <= 0.f) {
 			it = m_pebbles.erase(it);
 			continue;
@@ -118,7 +118,7 @@ void Pebbles::spawn_pebble(vec2 position, float dir)
     pebble.velocity.y = randY * (float)cos(randangle);
 
 	pebble.radius = rand()%(20 + 1) + 10.f;
-	pebble.life = 500;
+	pebble.life = 5;
 	m_pebbles.emplace_back(pebble);
 }
 
