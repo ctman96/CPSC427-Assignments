@@ -73,49 +73,55 @@ void Pebbles::update(float ms) {
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	auto it = m_pebbles.begin();
 	while (it != m_pebbles.end()) {
+		Pebble &pebble = (*it);
 		// Delete dead pebbles
-		(*it).life--;
-		if ((*it).life <= 0.f) {
+		pebble.life--;
+		if (pebble.life <= 0.f) {
 			it = m_pebbles.erase(it);
 			continue;
 		}
 
 		// Add gravity acceleration
-		if ((*it).acceleration.y < 8){
-			float gravity = 0.001f * (*it).radius;
-			(*it).acceleration.y += gravity;
+		if (pebble.acceleration.y < 8){
+			float gravity = 0.000001f * pebble.radius;
+			pebble.acceleration.y += gravity;
 		}
 
 		// Accelerate
-		(*it).velocity = add((*it).velocity, (*it).acceleration);
+		pebble.velocity.x += pebble.acceleration.x * ms;
+		pebble.velocity.y += pebble.acceleration.y * ms;
+
 
 		// Move
-		(*it).position = add((*it).position, (*it).velocity);
+		pebble.position = add(pebble.position, pebble.velocity);
 
 		it++;
 	}
 }
 
-void Pebbles::spawn_pebble(vec2 position) 
+void Pebbles::spawn_pebble(vec2 position, float dir)
 {
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	// HANDLE PEBBLE SPAWNING HERE
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	Pebble pebble;
-	pebble.position = position;
+	// place bullet n away from center of salmon
+	pebble.position.x = position.x + 100.f*std::sin(dir);
+	pebble.position.y = position.y + 100.f*std::cos(dir);
 
-	float randangle = (rand()%(360)) * M_PI / 80;
-	float randX = rand()%3+1;
-	float randY = rand()%3+1;
-	pebble.velocity.x = randX * cos(randangle);
-    pebble.velocity.y = randY * sin(randangle);
+	// Rand angle should be maybe 180 degrees, around mouth, based on dir
+	auto randangle = (float)(((rand()%(180)) * M_PI / 180.f) + dir - M_PI);
+	auto randX = (float)(rand()%3+1);
+	auto randY = (float)(rand()%3+1);
+	pebble.velocity.x = randX * (float)cos(randangle);
+    pebble.velocity.y = randY * (float)sin(randangle);
 
 	pebble.radius = rand()%(25-5 + 1) + 10.f;
-	pebble.life = 200;
+	pebble.life = 300;
 	m_pebbles.emplace_back(pebble);
 }
 
-void Pebbles::collides_with() 
+void Pebbles::collides_with()
 {
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	// HANDLE PEBBLE COLLISIONS HERE
@@ -125,18 +131,22 @@ void Pebbles::collides_with()
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	auto it = m_pebbles.begin();
 	while (it != m_pebbles.end()) {
+		Pebble &a = (*it);
 		// Check pebbles
-		auto pebit = m_pebbles.begin();
-		while (pebit != m_pebbles.end()) {
-			if (pebit == it)
+		auto otherIt = m_pebbles.begin();
+		while (otherIt != m_pebbles.end()) {
+			Pebble &b = (*otherIt);
+			// Don't collide with self
+			if (otherIt == it)
 				continue;
-
-			// TODO simple radius check?
+			if (a.collides_with(b)) {
+				// TODO: fix overlaps?
+				//float dist = sqrt((*it))
+			}
 		}
 	}
-	// TODO: For each pebble:
-	// TODO: Similar to old collides_with functions, with approximate radius checking?
-	// TODO: Or is radius essentially the scaleX and scaleY values, and do exact vertex checking?
+
+	// TODO salmon, fish turtles
 
 	/*
 	// Flip x velocity
@@ -208,4 +218,13 @@ void Pebbles::draw(const mat3& projection)
   	// Reset divisor
 	glVertexAttribDivisor(1, 0);
 	glVertexAttribDivisor(2, 0);
+}
+
+bool Pebbles::Pebble::collides_with(Pebbles::Pebble other) {
+	float dx = position.x - other.position.x;
+	float dy = position.y - other.position.y;
+	float d_sq = dx * dx + dy * dy;
+	float dr = radius + other.radius;
+	float r_sq = dr * dr;
+	return d_sq < r_sq;
 }

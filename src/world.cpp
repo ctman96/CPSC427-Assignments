@@ -279,7 +279,7 @@ bool World::update(float elapsed_ms)
     m_pebble_cooldown -= elapsed_ms * m_current_speed;
 	if (keyMap[GLFW_KEY_RIGHT_SHIFT] && m_pebble_cooldown < 0.f) {
 	    // TODO cooldown on pebble spawning
-		m_pebbles_emitter.spawn_pebble(m_salmon.get_position());
+		m_pebbles_emitter.spawn_pebble(m_salmon.get_position(), m_salmon.get_rotation());
 		m_pebble_cooldown = PEBBLE_COOLDOWN_MS;
 	}
 	m_pebbles_emitter.update(elapsed_ms * m_current_speed);

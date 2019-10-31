@@ -21,6 +21,8 @@ public:
 		vec2 velocity;
 		vec2 acceleration;
 		float radius;
+
+		bool collides_with(Pebble other);
 	};
 
 	// Creates all the associated render resources
@@ -38,7 +40,7 @@ public:
 	void draw(const mat3& projection) override;
 
 	// Spawn new pebble
-	void spawn_pebble(vec2 position);
+	void spawn_pebble(vec2 position, float dir);
 
 	// Trigger collision checks
 	void collides_with();
