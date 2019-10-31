@@ -118,7 +118,7 @@ void Pebbles::spawn_pebble(vec2 position, float dir)
     pebble.velocity.y = randY * (float)cos(randangle);
 
 	pebble.radius = rand()%(20 + 1) + 10.f;
-	pebble.life = 300;
+	pebble.life = 500;
 	m_pebbles.emplace_back(pebble);
 }
 
@@ -201,7 +201,6 @@ void Pebbles::collides_with(const Salmon& salmon, const std::vector<Fish> &fishe
 			}
 		}
 
-
 		// TODO could pull out fish/turtle collision code into reusable function
 		for (auto& turtle : turtles) {
 			vec2 turtlepos = turtle.get_position();
@@ -228,26 +227,31 @@ void Pebbles::collides_with(const Salmon& salmon, const std::vector<Fish> &fishe
 		}
 
 		// TODO salmon - bounding box then vertices? or can just do radius-based?
+		vec2 salmonpos = salmon.get_position();
+		float salmonr = std::max(salmon.get_scale().x, salmon.get_scale().y) * 1.2f;
+		if (pebble.collides_with(salmonpos, salmonr)) {
+			auto dist = std::sqrt((float)pow(pebble.position.x - salmonpos.x,2) + (float)pow(pebble.position.y - salmonpos.y, 2));
+			float overlap = (dist - pebble.radius - salmonr);
+			float dx = (pebble.position.x - salmonpos.x)/dist;
+			float dy = (pebble.position.y - salmonpos.y)/dist;
+			pebble.position.x -= overlap * dx;
+			pebble.position.y -= overlap * dy;
+
+
+			float pmass = pebble.radius*100;
+			float tmass = salmonr*100;
+
+			vec2 svel = salmon.get_velocity(); // TODO
+
+			float vap1 = 2*tmass/(pmass+tmass);
+			float vap2 = dot(sub(pebble.velocity, svel), sub(pebble.position, salmonpos)) / (float)pow(len(sub(pebble.position, salmonpos)), 2);
+			vec2 va = sub(pebble.velocity, mul(sub(pebble.position, salmonpos), vap1 * vap2));
+			pebble.velocity = va;
+		}
+
 
 		it++;
 	}
-
-	/*
-	// Flip x velocity
-	if (flipX) {
-		m_velocity.x = -m_velocity.x;
-	}
-	// Flip Y velocity
-	if (flipY) {
-		m_velocity.y = -m_velocity.y;
-	}
-	// Wait to adjust rotation until next frame
-	if (flipX || flipY) {
-		auto preangle = (float) atan2(pre.x, pre.y);
-		auto postangle = (float) atan2(m_velocity.x, m_velocity.y);
-		m_update_rotation = motion.radians + postangle - preangle;
-	}
- 	*/
 }
 
 // Draw pebbles using instancing

@@ -65,6 +65,10 @@ public:
 
     void toggleM_auto();
 
+    const vec2 &get_velocity() const;
+
+    const vec2 &get_scale() const;
+
 private:
 	float m_light_up_countdown_ms; // Used to keep track for how long the salmon should be lit up
 	bool m_is_alive; // True if the salmon is alive

@@ -471,3 +471,11 @@ void Salmon::toggleM_auto() {
 	m_auto = !m_auto;
 }
 
+const vec2 &Salmon::get_velocity() const {
+    return m_velocity;
+}
+
+const vec2 &Salmon::get_scale() const {
+	return physics.scale;
+}
+
