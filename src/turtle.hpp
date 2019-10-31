@@ -37,6 +37,9 @@ public:
 
 	void setM_path(const std::vector<vec2> &m_path);
 
+	const vec2 &getVel() const;
+
 private:
     std::vector<vec2> m_path;
+    vec2 vel;
 };

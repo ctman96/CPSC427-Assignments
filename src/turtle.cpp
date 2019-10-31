@@ -85,10 +85,10 @@ void Turtle::update(float ms)
     if (!m_path.empty() && m_path.back().x > 32.f) {
         vec2 dest = m_path.back();
 
-		// motion.radians = (float)atan2(dest.x - motion.position.x, dest.y - motion.position.y) - 3.14/2;
-
 		float xdif = dest.x - motion.position.x;
         float ydif = dest.y - motion.position.y;
+
+        vel = {xdif / 1000, ydif / 1000};
 
         if (std::abs(xdif) >= 1) {
 			bool dif = (xdif > 0);
@@ -109,6 +109,7 @@ void Turtle::update(float ms)
     } else {
 		motion.radians = 0;
         motion.position.x += -1 * step;
+		vel = {-motion.speed / 1000, 0.f};
     }
 }
 
@@ -186,4 +187,8 @@ void Turtle::setM_path(const std::vector<vec2> &m_path) {
 	if (!m_path.empty()) {
 		Turtle::m_path = m_path;
 	}
+}
+
+const vec2 &Turtle::getVel() const {
+	return vel;
 }

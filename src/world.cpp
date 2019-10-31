@@ -283,6 +283,7 @@ bool World::update(float elapsed_ms)
 		m_pebble_cooldown = PEBBLE_COOLDOWN_MS;
 	}
 	m_pebbles_emitter.update(elapsed_ms * m_current_speed);
+	m_pebbles_emitter.collides_with(m_salmon, m_fish, m_turtles);
 
 	// Removing out of screen turtles
 	auto turtle_it = m_turtles.begin();

@@ -3,6 +3,7 @@
 // Header
 #include "pebbles.hpp"
 
+
 #include <cmath>
 #include <iostream>
 
@@ -97,8 +98,6 @@ void Pebbles::update(float ms) {
 
 		it++;
 	}
-
-	collides_with();
 }
 
 void Pebbles::spawn_pebble(vec2 position, float dir)
@@ -123,7 +122,7 @@ void Pebbles::spawn_pebble(vec2 position, float dir)
 	m_pebbles.emplace_back(pebble);
 }
 
-void Pebbles::collides_with()
+void Pebbles::collides_with(const Salmon& salmon, const std::vector<Fish> &fishes,  const std::vector<Turtle> &turtles)
 {
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	// HANDLE PEBBLE COLLISIONS HERE
@@ -133,45 +132,105 @@ void Pebbles::collides_with()
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	auto it = m_pebbles.begin();
 	while (it != m_pebbles.end()) {
-		Pebble &a = (*it);
+		Pebble &pebble = (*it);
+
+		
 		// Check pebbles
 		auto otherIt = m_pebbles.begin();
 		while (otherIt != m_pebbles.end()) {
-			Pebble &b = (*otherIt);
+			Pebble &other = (*otherIt);
 			// Don't collide with self
-			if (otherIt != it && a.collides_with(b)) {
+			if (otherIt != it && pebble.collides_with(other.position, other.radius)) {
 				// Fix overlaps
-				auto dist = std::sqrt((float)pow(a.position.x - b.position.x,2) + (float)pow(a.position.y - b.position.y, 2));
-				float overlap = (dist - a.radius - b.radius) / 2.f;
-				float theta = std::atan2(b.position.x - a.position.x, b.position.y - a.position.y);
-				a.position.x -= overlap * std::cos(theta);
-				b.position.x -= overlap * std::sin(theta);
+				auto dist = std::sqrt((float)pow(pebble.position.x - other.position.x,2) + (float)pow(pebble.position.y - other.position.y, 2));
+				float overlap = (dist - pebble.radius - other.radius) / 2.f;
+
+				float dx = (pebble.position.x - other.position.x)/dist;
+				float dy = (pebble.position.y - other.position.y)/dist;
+				pebble.position.x -= overlap * dx;
+				pebble.position.y -= overlap * dy;
+				other.position.x += overlap * dx;
+				other.position.y += overlap * dy;
+
+
 
 				// https://en.wikipedia.org/wiki/Elastic_collision
-				float amass = a.radius*100;
-				float bmass = b.radius*100;
+				float amass = pebble.radius*100;
+				float bmass = other.radius*100;
 
 				float vap1 = 2*bmass/(amass+bmass);
-				float vap2 = dot(sub(a.velocity, b.velocity), sub(a.position, b.position)) / (float)pow(len(sub(a.position, b.position)), 2);
-				vec2 va = sub(a.velocity, mul(sub(a.position, b.position), vap1 * vap2));
+				float vap2 = dot(sub(pebble.velocity, other.velocity), sub(pebble.position, other.position)) / (float)pow(len(sub(pebble.position, other.position)), 2);
+				vec2 va = sub(pebble.velocity, mul(sub(pebble.position, other.position), vap1 * vap2));
 
 				float vbp1 = 2*amass/(amass+bmass);
-				float vbp2 = dot(sub(b.velocity, a.velocity), sub(b.position, a.position)) / (float)pow(len(sub(b.position, a.position)), 2);
-				vec2 vb = sub(b.velocity, mul(sub(b.position, a.position), vbp1*vbp2));
+				float vbp2 = dot(sub(other.velocity, pebble.velocity), sub(other.position, pebble.position)) / (float)pow(len(sub(other.position, pebble.position)), 2);
+				vec2 vb = sub(other.velocity, mul(sub(other.position, pebble.position), vbp1*vbp2));
 
 				//vec2 va = mul(add(mul(a.velocity,amass - bmass), mul(b.velocity, 2.f*bmass)), 1/(amass+bmass));
 				//vec2 vb = mul(add(mul(b.velocity, bmass - amass), mul(a.velocity, 2.f*amass)), 1/(amass+bmass));
-				std::cout << a.velocity.x <<","<< a.velocity.y << std::endl;
+				std::cout << pebble.velocity.x <<","<< pebble.velocity.y << std::endl;
 				std::cout << va.x << "," << va.y << std::endl;
-				a.velocity = va;
-				b.velocity = vb;
+				pebble.velocity = va;
+				other.velocity = vb;
 			}
 			otherIt++;
 		}
+
+
+		for (auto& fish : fishes) {
+			vec2 fishpos = fish.get_position();
+			float fishr = std::max(fish.get_bounding_box().x, fish.get_bounding_box().y) * 0.6f;
+			if (pebble.collides_with(fishpos, fishr)) {
+				auto dist = std::sqrt((float)pow(pebble.position.x - fishpos.x,2) + (float)pow(pebble.position.y - fishpos.y, 2));
+				float overlap = (dist - pebble.radius - fishr);
+				float dx = (pebble.position.x - fishpos.x)/dist;
+				float dy = (pebble.position.y - fishpos.y)/dist;
+				pebble.position.x -= overlap * dx;
+				pebble.position.y -= overlap * dy;
+
+
+				float pmass = pebble.radius*100;
+				float fmass = fishr*100;
+
+				vec2 fvel = {-190.f/1000, 0.f}; // TODO
+
+				float vap1 = 2*fmass/(pmass+fmass);
+				float vap2 = dot(sub(pebble.velocity, fvel), sub(pebble.position, fishpos)) / (float)pow(len(sub(pebble.position, fishpos)), 2);
+				vec2 va = sub(pebble.velocity, mul(sub(pebble.position, fishpos), vap1 * vap2));
+				pebble.velocity = va;
+			}
+		}
+
+
+		// TODO could pull out fish/turtle collision code into reusable function
+		for (auto& turtle : turtles) {
+			vec2 turtlepos = turtle.get_position();
+			float turtler = std::max(turtle.get_bounding_box().x, turtle.get_bounding_box().y) * 0.6f;
+			if (pebble.collides_with(turtlepos, turtler)) {
+				auto dist = std::sqrt((float)pow(pebble.position.x - turtlepos.x,2) + (float)pow(pebble.position.y - turtlepos.y, 2));
+				float overlap = (dist - pebble.radius - turtler);
+				float dx = (pebble.position.x - turtlepos.x)/dist;
+				float dy = (pebble.position.y - turtlepos.y)/dist;
+				pebble.position.x -= overlap * dx;
+				pebble.position.y -= overlap * dy;
+
+
+				float pmass = pebble.radius*100;
+				float tmass = turtler*100;
+
+				vec2 tvel = turtle.getVel(); // TODO
+
+				float vap1 = 2*tmass/(pmass+tmass);
+				float vap2 = dot(sub(pebble.velocity, tvel), sub(pebble.position, turtlepos)) / (float)pow(len(sub(pebble.position, turtlepos)), 2);
+				vec2 va = sub(pebble.velocity, mul(sub(pebble.position, turtlepos), vap1 * vap2));
+				pebble.velocity = va;
+			}
+		}
+
+		// TODO salmon - bounding box then vertices? or can just do radius-based?
+
 		it++;
 	}
-
-	// TODO salmon, fish turtles
 
 	/*
 	// Flip x velocity
@@ -245,11 +304,11 @@ void Pebbles::draw(const mat3& projection)
 	glVertexAttribDivisor(2, 0);
 }
 
-bool Pebbles::Pebble::collides_with(Pebbles::Pebble other) {
-	float dx = position.x - other.position.x;
-	float dy = position.y - other.position.y;
+bool Pebbles::Pebble::collides_with(vec2 pos, float rad) {
+	float dx = position.x - pos.x;
+	float dy = position.y - pos.y;
 	float d_sq = dx * dx + dy * dy;
-	float dr = radius + other.radius;
+	float dr = radius + rad;
 	float r_sq = dr * dr;
 	return d_sq < r_sq;
 }

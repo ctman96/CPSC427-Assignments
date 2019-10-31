@@ -3,6 +3,9 @@
 #include <vector>
 
 #include "common.hpp"
+#include "salmon.hpp"
+#include "fish.hpp"
+#include "turtle.hpp"
 
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 // DON'T WORRY ABOUT THIS CLASS UNTIL ASSIGNMENT 3
@@ -22,7 +25,7 @@ public:
 		vec2 acceleration;
 		float radius;
 
-		bool collides_with(Pebble other);
+		bool collides_with(vec2 pos, float rad);
 	};
 
 	// Creates all the associated render resources
@@ -43,7 +46,7 @@ public:
 	void spawn_pebble(vec2 position, float dir);
 
 	// Trigger collision checks
-	void collides_with();
+	void collides_with(const Salmon& salmon, const std::vector<Fish> &fishes,  const std::vector<Turtle> &turtles);
 
 private:
 	GLuint m_instance_vbo; // vbo for instancing pebbles
