@@ -11,6 +11,10 @@
 #include <cmath>
 #include <iostream>
 
+namespace {
+	const size_t OUTLINE_DELAY = 100;
+}
+
 bool Salmon::init()
 {
 	m_vertices.clear();
@@ -84,7 +88,7 @@ bool Salmon::init()
 	m_auto = false;
 	m_light_up_countdown_ms = -1.f;
 	m_update_rotation = std::numeric_limits<float>::max();
-
+	outline_spawn_timer = 0;
 
 	// Uhh
 	float minX, minY = 99999;
@@ -103,7 +107,7 @@ bool Salmon::init()
 	float maxwh = std::max(width, height);
 	m_bbox = {maxwh, maxwh};
 
-	return outline_emitter.init(m_vertices);
+	return outline_emitter.init(m_vertices, m_indices);
 }
 
 // Releases all graphics resources
@@ -123,7 +127,12 @@ void Salmon::destroy()
 void Salmon::update(float ms, std::map<int, bool> &keyMap, vec2 mouse_position, vec2 screen)
 {
 	outline_emitter.update(ms);
-	outline_emitter.spawn_outline(motion.position, physics.scale, motion.radians - 3.14f/2);
+	outline_spawn_timer -= ms;
+	if (outline_spawn_timer <= 0) {
+		outline_spawn_timer = OUTLINE_DELAY;
+		outline_emitter.spawn_outline(motion.position, physics.scale, motion.radians - 3.14f/2);
+	}
+
 
 	// Add all vertices to debug_vertices
 	transform.begin();

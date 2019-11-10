@@ -7,8 +7,12 @@
 
 static const float START_LIFE = 0.5;
 
-bool outline_particle_emitter::init(const std::vector<Vertex> vertices) {
-    vcount = vertices.size();
+bool outline_particle_emitter::init(std::vector<Vertex> vertices, std::vector<uint16_t> indices) {
+    icount = indices.size();
+
+    for (auto& vertex : vertices) {
+        ++vertex.position.z;
+    }
 
     // Clearing errors
     gl_flush_errors();
@@ -18,8 +22,15 @@ bool outline_particle_emitter::init(const std::vector<Vertex> vertices) {
     glBindBuffer(GL_ARRAY_BUFFER, mesh.vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vertices.size(), vertices.data(), GL_STATIC_DRAW);
 
+    // Index Buffer creation
+    glGenBuffers(1, &mesh.ibo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.ibo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * indices.size(), indices.data(), GL_STATIC_DRAW);
+
     glGenBuffers(1, &m_instance_vbo);
     glBindBuffer(GL_ARRAY_BUFFER, m_instance_vbo);
+
+    glGenVertexArrays(1, &mesh.vao);
 
     if (gl_has_errors())
         return false;
@@ -34,6 +45,8 @@ bool outline_particle_emitter::init(const std::vector<Vertex> vertices) {
 void outline_particle_emitter::destroy() {
     glDeleteBuffers(1, &mesh.vbo);
     glDeleteBuffers(1, &m_instance_vbo);
+    glDeleteBuffers(1, &mesh.ibo);
+    glDeleteVertexArrays(1, &mesh.vao);
 
     glDeleteShader(effect.vertex);
     glDeleteShader(effect.fragment);
@@ -72,7 +85,9 @@ void outline_particle_emitter::draw(const mat3 &projection) {
 
     // Draw the screen texture on the geometry
     // Setting vertices
+    glBindVertexArray(mesh.vao);
     glBindBuffer(GL_ARRAY_BUFFER, mesh.vbo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.ibo);
 
     // Mesh vertex positions
     // Bind to attribute 0 (in_position) as in the vertex shader
@@ -110,7 +125,7 @@ void outline_particle_emitter::draw(const mat3 &projection) {
 
     // Draw using instancing
     // https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glDrawArraysInstanced.xhtml
-    glDrawArraysInstanced(GL_POINTS, 0, vcount*3, m_outlines.size());
+    glDrawArraysInstanced(GL_LINE_LOOP, 0, icount, m_outlines.size());
 
     // Reset divisor
     glVertexAttribDivisor(1, 0);
@@ -122,7 +137,7 @@ void outline_particle_emitter::spawn_outline(vec2 position, vec2 scale, float ro
     outline.position = position;
     outline.scale = scale;
     outline.rotation = rotation;
-    outline.color = { 0.f, 0.f, 0.f, 1.f};
+    outline.color = { 1.f, 1.f, 1.f, 1.f};
     outline.life = START_LIFE;
     m_outlines.emplace_back(outline);
 }

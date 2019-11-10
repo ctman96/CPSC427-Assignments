@@ -19,7 +19,7 @@ class outline_particle_emitter : public Entity {
     };
 public:
     // Creates all the associated render resources
-    bool init(std::vector<Vertex> vertices);
+    bool init(std::vector<Vertex> vertices, std::vector<uint16_t> indices);
 
     // Releases all associated resources
     void destroy();
@@ -37,7 +37,7 @@ public:
 private:
     GLuint m_instance_vbo; // vbo for instancing
     std::vector<Outline> m_outlines; // vector of outlines
-    int vcount;
+    int icount;
 };
 
 

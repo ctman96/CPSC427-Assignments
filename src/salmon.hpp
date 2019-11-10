@@ -74,6 +74,7 @@ private:
 	float m_light_up_countdown_ms; // Used to keep track for how long the salmon should be lit up
 	bool m_is_alive; // True if the salmon is alive
     bool m_auto;
+	float outline_spawn_timer;
     outline_particle_emitter outline_emitter;
 
     vec2 m_velocity; // Velocity
