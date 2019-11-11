@@ -84,13 +84,13 @@ void Pebbles::update(float ms) {
 
 		// Add gravity acceleration
 		if (pebble.acceleration.y < 8){
-			float gravity = 0.01f * pebble.radius;
+			float gravity = 1000.f * pebble.radius;
 			pebble.acceleration.y += gravity * (ms / 1000);
 		}
 
 		// Accelerate
-		pebble.velocity.x += pebble.acceleration.x * ms;
-		pebble.velocity.y += pebble.acceleration.y * ms;
+		pebble.velocity.x += pebble.acceleration.x * (ms / 1000);
+		pebble.velocity.y += pebble.acceleration.y * (ms / 1000);
 
 
 		// Adjust for time
@@ -137,7 +137,7 @@ void Pebbles::spawn_pebble(vec2 position, float dir)
 	m_pebbles.emplace_back(pebble);
 }
 
-void Pebbles::collides_with(Salmon& salmon, const std::vector<Fish> &fishes,  const std::vector<Turtle> &turtles)
+void Pebbles::collides_with(Salmon& salmon, const std::vector<Fish> &fishes, std::vector<Turtle> &turtles)
 {
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	// HANDLE PEBBLE COLLISIONS HERE
@@ -230,14 +230,20 @@ void Pebbles::collides_with(Salmon& salmon, const std::vector<Fish> &fishes,  co
 
 
 				float pmass = pebble.radius*100;
-				float tmass = turtler*100;
+				float tmass = turtler*50;
 
 				vec2 tvel = turtle.getVel(); // TODO
 
 				float vap1 = 2*tmass/(pmass+tmass);
 				float vap2 = dot(sub(pebble.velocity, tvel), sub(pebble.position, turtlepos)) / (float)pow(len(sub(pebble.position, turtlepos)), 2);
 				vec2 va = sub(pebble.velocity, mul(sub(pebble.position, turtlepos), vap1 * vap2));
+
+				float vbp1 = 2*pmass/(tmass+pmass);
+				float vbp2 = dot(sub(tvel, pebble.velocity), sub(turtlepos, pebble.position)) / (float)pow(len(sub(turtlepos, pebble.position)), 2);
+				vec2 vb = sub(tvel, mul(sub(turtlepos, pebble.position), vbp1*vbp2));
+
 				pebble.velocity = va;
+				turtle.setVel(vb);
 			}
 		}
 
