@@ -277,7 +277,7 @@ bool World::update(float elapsed_ms)
 	// DON'T WORRY ABOUT THIS UNTIL ASSIGNMENT 3
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     m_pebble_cooldown -= elapsed_ms * m_current_speed;
-	if (keyMap[GLFW_KEY_RIGHT_SHIFT] && m_pebble_cooldown < 0.f) {
+	if ((keyMap[GLFW_KEY_RIGHT_SHIFT] ||keyMap[GLFW_KEY_LEFT_SHIFT]) && m_pebble_cooldown < 0.f) {
 	    // TODO cooldown on pebble spawning
 		m_pebbles_emitter.spawn_pebble(m_salmon.get_position(), m_salmon.get_rotation());
 		m_pebble_cooldown = PEBBLE_COOLDOWN_MS;
@@ -357,7 +357,7 @@ bool World::update(float elapsed_ms)
 
 	// Spawning bullets
     m_bullet_cooldown -= elapsed_ms * m_current_speed;
-	if (keyMap[GLFW_KEY_RIGHT_CONTROL] && m_bullet_cooldown < 0.f) {
+	if ((keyMap[GLFW_KEY_RIGHT_CONTROL] ||keyMap[GLFW_KEY_LEFT_CONTROL]) && m_bullet_cooldown < 0.f) {
 	    if (!spawn_bullet())
 	        return false;
 	    Bullet& new_bullet = m_bullets.back();

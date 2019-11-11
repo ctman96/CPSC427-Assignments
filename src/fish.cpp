@@ -81,43 +81,62 @@ void Fish::destroy()
 
 void Fish::update(float ms)
 {
-	float step = motion.speed * (ms / 1000);
-
 	if (!m_path.empty() && m_path.back().x > 32.f) {
 		vec2 dest = m_path.back();
 
-        float xdif=dest.x - motion.position.x;
-        float ydif=dest.y - motion.position.y;
 
-        // Step in direction of the path node
-		if (std::abs(xdif) >= 1) {
-		    bool dif = (xdif > 0);
-			motion.position.x += dif ? step : -1*step;
+		// acceleration towards path;
+		float r = atan2f(dest.x - motion.position.x, dest.y - motion.position.y);
+		motion.acceleration.x =  1000 * sinf(r);
+		motion.acceleration.y = 1000 * cosf(r);
 
-			// Remove node if moved past
-			float newxdif = dest.x - motion.position.x;
-			if (dif != (newxdif > 0)) m_path.erase(--m_path.end());
+		// Accelerate
+		float max = 200;
+		if (max >= 0) {
+			float newX = motion.velocity.x + motion.acceleration.x * (ms/1000);
+			if (newX > max) newX = max;
+			if (newX < -max) newX = -max;
 
-		} else if (std::abs(ydif) >= 1) {
-            bool dif = (ydif > 0);
-			motion.position.y += dif ? step : -1*step;
+			float newY = motion.velocity.y + motion.acceleration.y * (ms/1000);
+			if (newY > max) newY = max;
+			if (newY < -max) newY = -max;
 
-            float newydif = dest.y - motion.position.y;
-            if (dif != (newydif > 0)) m_path.erase(--m_path.end());
-		} else {
-            motion.position.x += -1 * step;
+			motion.velocity.x = newX;
+			motion.velocity.y = newY;
 		}
 
+		float xdifpre = dest.x - motion.position.x;
+		float ydifpre = dest.y - motion.position.y;
+
+		// Adjust for time
+		vec2 step = {motion.velocity.x * (ms / 1000), motion.velocity.y * (ms / 1000)};
+
+		// Move
+		motion.position = add(motion.position, step);
+
+		float xdifpost = dest.x - motion.position.x;
+		float ydifpost = dest.y - motion.position.y;
+		// If moved past point, focus on next
+		if (((xdifpre > 0) != (xdifpost > 0)) || (ydifpre > 0) != (ydifpost > 0)) {
+			m_path.erase(--m_path.end());
+		}
 	} else {
+		float step = motion.speed * (ms / 1000);
 		motion.position.x += -1 * step;
+		motion.velocity = {-step, 0.f};
 	}
 
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	// HANDLE FISH AI HERE
-	// DON'T WORRY ABOUT THIS UNTIL ASSIGNMENT 2
-	// You will likely want to write new functions and need to create
-	// new data structures to implement a more sophisticated Fish AI. 
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	// Decay velocity (Water resistance)
+	float friction = 0.03;
+	if (motion.velocity.x > 0.f)
+		motion.velocity.x -= friction * motion.velocity.x;
+	else if (motion.velocity.x < 0.f)
+		motion.velocity.x += -friction * motion.velocity.x;
+
+	if (motion.velocity.y > 0.f)
+		motion.velocity.y -= friction * motion.velocity.y;
+	else if (motion.velocity.y < 0.f)
+		motion.velocity.y += -friction * motion.velocity.y;
 }
 
 void Fish::draw(const mat3& projection)
@@ -194,4 +213,12 @@ void Fish::setM_path(const std::vector<vec2> &m_path) {
 	if (!m_path.empty()) {
 		Fish::m_path = m_path;
 	}
+}
+
+const vec2 Fish::get_velocity() const {
+	return motion.velocity;
+}
+
+void Fish::set_velocity(vec2 vel) {
+	motion.velocity = vel;
 }

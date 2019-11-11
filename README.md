@@ -14,7 +14,7 @@ Right   :   Rotates CW
 Up      :   Move forwards along facing
 Down    :   Move backwards along facing
 
-R Ctrl  :   Shoot bullet along facing
+L/R Ctrl  :   Shoot bullet along facing
 
 A       :   Switch to advanced/debug visualization
 B       :   Switch to basic
@@ -24,23 +24,31 @@ D       :   Toggle salmon AI control
 Minus   :   Decrease pathfinding update frequency
 Equals  :   Increase pathfinding update frequency
 
+L/R Shift  :  Fire pebbles ahead of you
+
 ## Added features:
 
-### Salmon Collisions
-- AABB bounding box checking, and then exact vertex collision checking
-- exact vertex collision checking (checking AABB first)
-- Wall collision detection (AABB followed by exact vertex), Debug visualization of colliding vertices
-- Wall bouncing - Flip direction of motion, rotate appropriately
+### Particle Animation
+Implemented pebble particle system that fires pebbles periodically from the salmon's mouth while holding SHIFT.
+- Randomized initial directions
+- Randomized initial velocity
+- Randomized Radii/Mass
+- Pebbles velocities/acceleration calculations affected by both gravity and water resistance.
 
-### AI
-- Entity grid which tracks entity types in a grid made up of 32px squares. Debug visualization of grid and square types
-- Reusable A* pathfinding utilizing grid. 
-- Smarter fish - Fish want to move to x=0, avoiding any Player squares. It will check for clearance to ensure its bounding box won't overlap with any Player squares. Debug visualization of paths
-- User controlled pathfinding frequency (-= keys)
-- Smarter turtles - Turtles will chase after the player. Debug visualization of paths
-- Sorta-smart salmon AI - When toggled, salmon will attempt to avoid the turtle and get the fish, though can potentially be caught by the turtle when distracted by a fish. Does like to bang up against boundaries often, so is best observed in basic visualization
+### Bouncing Pebbles
+- When pebbles collide with each other, they bounce using physcially correct bounce,  speed, and acceleration, by
+using the equation for two dimensional collision between two moving circles 
+(https://en.wikipedia.org/wiki/Elastic_collision#Two-dimensional_collision_with_two_moving_objects)
+    - Mass is calculated relative to the pebble's radius
+
+- When pebbles collide with other entities they perform a similar collision, 
+approximating the other assets as spheres as well. Mass is similarly relative to the radius of the entities.
 
 ## Creative portion:
-- Not sure if it counts but the full entity grid system and reusable A* search?
-- Smart turtle which chases the player and avoids fish
-- Salmon AI mode (Was originally going to implement a second salmon to fight against, but it caused a bunch of graphical bugs I had no idea how to fix).
+- Pebble collisions trigger change in the motion of collided entities. 
+Salmon/Turtles/Fish were adjusted also be affected by pebble collisions, 
+receiving changes to velocity upon collision with a pebble according to the same formula.
+
+- I believe all of my physics calculations take elapsed time into consideration in their calculations.
+
+- Trippy Salmon after-image particle effect?

@@ -157,12 +157,12 @@ void Salmon::update(float ms, std::map<int, bool> &keyMap, vec2 mouse_position, 
 		if (!m_auto) {
             // Move along direction
             if (keyMap[GLFW_KEY_UP]) {
-                accelX = 100.f * (float)sin(motion.radians);
-                accelY = 100.f * (float)cos(motion.radians);
+                accelX = 10000.f * (float)sin(motion.radians);
+                accelY = 10000.f * (float)cos(motion.radians);
             }
             if (keyMap[GLFW_KEY_DOWN]) {
-                accelX = -100.f * (float)sin(motion.radians);
-                accelY = -100.f * (float)cos(motion.radians);
+                accelX = -10000.f * (float)sin(motion.radians);
+                accelY = -10000.f * (float)cos(motion.radians);
             }
 
             // Rotate
@@ -184,7 +184,7 @@ void Salmon::update(float ms, std::map<int, bool> &keyMap, vec2 mouse_position, 
 		}
 
 		motion.acceleration = {accelX, accelY};
-		accelerate();
+		accelerate(ms);
 
 		if (!check_wall_collisions(screen)){
 			vec2 step = {motion.velocity.x * (ms / 1000), motion.velocity.y * (ms / 1000)};
@@ -429,14 +429,14 @@ void Salmon::set_rotation(float radians)
 	motion.radians = radians;
 }
 
-void Salmon::accelerate() {
+void Salmon::accelerate(float ms) {
 	float max = 400.f;
 	if (max >= 0) {
-		float newX = motion.velocity.x + motion.acceleration.x;
+		float newX = motion.velocity.x + motion.acceleration.x * (ms / 1000);
 		if (newX > max) newX = max;
 		if (newX < -max) newX = -max;
 
-		float newY = motion.velocity.y + motion.acceleration.y;
+		float newY = motion.velocity.y + motion.acceleration.y * (ms / 1000);
 		if (newY > max) newY = max;
 		if (newY < -max) newY = -max;
 

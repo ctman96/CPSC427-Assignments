@@ -41,7 +41,7 @@ public:
 	void set_rotation(float radians);
 
 	// Change salmon velocity
-	void accelerate();
+	void accelerate(float ms);
 
 	// True if the salmon is alive
 	bool is_alive()const;

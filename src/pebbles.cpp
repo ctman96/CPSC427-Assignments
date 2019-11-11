@@ -100,7 +100,7 @@ void Pebbles::update(float ms) {
 		pebble.position = add(pebble.position, step);
 
 		// Decay velocity (Water resistance)
-		float friction = 0.01;
+		float friction = 1.f * (ms/1000);
 		if (pebble.velocity.x > 0.f)
 			pebble.velocity.x -= friction * pebble.velocity.x;
 		else if (pebble.velocity.x < 0.f)
@@ -137,7 +137,7 @@ void Pebbles::spawn_pebble(vec2 position, float dir)
 	m_pebbles.emplace_back(pebble);
 }
 
-void Pebbles::collides_with(Salmon& salmon, const std::vector<Fish> &fishes, std::vector<Turtle> &turtles)
+void Pebbles::collides_with(Salmon& salmon, std::vector<Fish> &fishes, std::vector<Turtle> &turtles)
 {
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	// HANDLE PEBBLE COLLISIONS HERE
@@ -207,12 +207,18 @@ void Pebbles::collides_with(Salmon& salmon, const std::vector<Fish> &fishes, std
 				float pmass = pebble.radius*100;
 				float fmass = fishr*100;
 
-				vec2 fvel = {-190.f/1000, 0.f}; // TODO
+				vec2 fvel = fish.get_velocity();
 
 				float vap1 = 2*fmass/(pmass+fmass);
 				float vap2 = dot(sub(pebble.velocity, fvel), sub(pebble.position, fishpos)) / (float)pow(len(sub(pebble.position, fishpos)), 2);
 				vec2 va = sub(pebble.velocity, mul(sub(pebble.position, fishpos), vap1 * vap2));
+
+				float vbp1 = 2*pmass/(fmass+pmass);
+				float vbp2 = dot(sub(fvel, pebble.velocity), sub(fishpos, pebble.position)) / (float)pow(len(sub(fishpos, pebble.position)), 2);
+				vec2 vb = sub(fvel, mul(sub(fishpos, pebble.position), vbp1*vbp2));
+
 				pebble.velocity = va;
+				fish.set_velocity(vb);
 			}
 		}
 

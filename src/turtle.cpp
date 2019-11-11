@@ -80,17 +80,14 @@ void Turtle::destroy()
 
 void Turtle::update(float ms)
 {
-
-    // TODO switch turtle to using velocity/acceleration and be affected by pebbles
-
     if (!m_path.empty() && m_path.back().x > 32.f) {
         vec2 dest = m_path.back();
 
 
         // acceleration towards path;
         float r = atan2f(dest.x - motion.position.x, dest.y - motion.position.y);
-		motion.acceleration.x =  100 * sinf(r);
-		motion.acceleration.y = 100 * cosf(r);
+		motion.acceleration.x =  500 * sinf(r);
+		motion.acceleration.y = 500 * cosf(r);
 
 		// Accelerate
 		float max = 300;

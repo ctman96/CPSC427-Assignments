@@ -46,7 +46,7 @@ public:
 	void spawn_pebble(vec2 position, float dir);
 
 	// Trigger collision checks
-	void collides_with(Salmon& salmon, const std::vector<Fish> &fishes,  std::vector<Turtle> &turtles);
+	void collides_with(Salmon& salmon, std::vector<Fish> &fishes,  std::vector<Turtle> &turtles);
 
 private:
 	GLuint m_instance_vbo; // vbo for instancing pebbles
