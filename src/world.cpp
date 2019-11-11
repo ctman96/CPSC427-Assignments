@@ -15,6 +15,7 @@ namespace
 	const size_t TURTLE_DELAY_MS = 4000;
 	const size_t FISH_DELAY_MS = 10000;
 	const size_t BULLET_COOLDOWN_MS = 1000;
+	const size_t PEBBLE_COOLDOWN_MS = 250;
 
 	namespace
 	{
@@ -275,6 +276,14 @@ bool World::update(float elapsed_ms)
 	// HANDLE PEBBLE SPAWN/UPDATES HERE
 	// DON'T WORRY ABOUT THIS UNTIL ASSIGNMENT 3
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    m_pebble_cooldown -= elapsed_ms * m_current_speed;
+	if ((keyMap[GLFW_KEY_RIGHT_SHIFT] ||keyMap[GLFW_KEY_LEFT_SHIFT]) && m_pebble_cooldown < 0.f) {
+	    // TODO cooldown on pebble spawning
+		m_pebbles_emitter.spawn_pebble(m_salmon.get_position(), m_salmon.get_rotation());
+		m_pebble_cooldown = PEBBLE_COOLDOWN_MS;
+	}
+	m_pebbles_emitter.update(elapsed_ms * m_current_speed);
+	m_pebbles_emitter.collides_with(m_salmon, m_fish, m_turtles);
 
 	// Removing out of screen turtles
 	auto turtle_it = m_turtles.begin();
@@ -348,7 +357,7 @@ bool World::update(float elapsed_ms)
 
 	// Spawning bullets
     m_bullet_cooldown -= elapsed_ms * m_current_speed;
-	if (keyMap[GLFW_KEY_RIGHT_CONTROL] && m_bullet_cooldown < 0.f) {
+	if ((keyMap[GLFW_KEY_RIGHT_CONTROL] ||keyMap[GLFW_KEY_LEFT_CONTROL]) && m_bullet_cooldown < 0.f) {
 	    if (!spawn_bullet())
 	        return false;
 	    Bullet& new_bullet = m_bullets.back();
@@ -433,6 +442,7 @@ void World::draw()
 	// Drawing entities
 	if (m_debug)
 		aiGrid.draw(projection_2D);
+	m_pebbles_emitter.draw(projection_2D);
 	for (auto& turtle : m_turtles)
 		turtle.draw(projection_2D);
 	for (auto& fish : m_fish)

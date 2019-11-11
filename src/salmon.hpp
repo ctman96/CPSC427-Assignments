@@ -2,6 +2,7 @@
 
 #include <map>
 #include "common.hpp"
+#include "outline_particle_emitter.hpp"
 #include <vector>
 
 class Turtle;
@@ -40,7 +41,7 @@ public:
 	void set_rotation(float radians);
 
 	// Change salmon velocity
-	void accelerate(float x, float y);
+	void accelerate(float ms);
 
 	// True if the salmon is alive
 	bool is_alive()const;
@@ -65,12 +66,21 @@ public:
 
     void toggleM_auto();
 
+    const vec2 &get_velocity() const;
+
+    const vec2 &get_scale() const;
+
+    void set_velocity(vec2 vel);
+
+    bool colides_with_circle(vec2 pos, float r);
+
 private:
 	float m_light_up_countdown_ms; // Used to keep track for how long the salmon should be lit up
 	bool m_is_alive; // True if the salmon is alive
     bool m_auto;
+	float outline_spawn_timer;
+    outline_particle_emitter outline_emitter;
 
-    vec2 m_velocity; // Velocity
 	float m_update_rotation;
 	vec2 m_bbox;
 	std::vector<vec2> m_path;

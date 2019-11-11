@@ -3,6 +3,9 @@
 #include <vector>
 
 #include "common.hpp"
+#include "salmon.hpp"
+#include "fish.hpp"
+#include "turtle.hpp"
 
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 // DON'T WORRY ABOUT THIS CLASS UNTIL ASSIGNMENT 3
@@ -19,7 +22,10 @@ public:
 		float life = 0.0f; // remove pebble when its life reaches 0
 		vec2 position;
 		vec2 velocity;
+		vec2 acceleration;
 		float radius;
+
+		bool collides_with(vec2 pos, float rad);
 	};
 
 	// Creates all the associated render resources
@@ -37,10 +43,10 @@ public:
 	void draw(const mat3& projection) override;
 
 	// Spawn new pebble
-	void spawn_pebble(vec2 position);
+	void spawn_pebble(vec2 position, float dir);
 
 	// Trigger collision checks
-	void collides_with();
+	void collides_with(Salmon& salmon, std::vector<Fish> &fishes,  std::vector<Turtle> &turtles);
 
 private:
 	GLuint m_instance_vbo; // vbo for instancing pebbles

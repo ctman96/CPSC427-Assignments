@@ -39,6 +39,10 @@ public:
 
 	void setM_path(const std::vector<vec2> &m_path);
 
+	const vec2 get_velocity() const;
+
+	void set_velocity(vec2 vel);
+
 private:
 	std::vector<vec2> m_path;
 };

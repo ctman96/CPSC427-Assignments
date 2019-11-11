@@ -16,5 +16,5 @@ void main()
     	in_translate.x, in_translate.y, 1.0);
 
 	vec3 pos = projection * transform * vec3(in_position.xy, 1.0);
-	gl_Position = vec4(pos.xy, in_position.z, 1.0);
+	gl_Position = vec4(pos.xy, 0.5, 1.0);
 }
