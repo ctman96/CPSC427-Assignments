@@ -82,6 +82,8 @@ void Turtle::update(float ms)
 {
     float step = motion.speed * (ms / 1000);
 
+    // TODO switch turtle to using velocity/acceleration and be affected by pebbles
+
     if (!m_path.empty() && m_path.back().x > 32.f) {
         vec2 dest = m_path.back();
 

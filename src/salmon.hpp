@@ -41,7 +41,7 @@ public:
 	void set_rotation(float radians);
 
 	// Change salmon velocity
-	void accelerate(float x, float y);
+	void accelerate();
 
 	// True if the salmon is alive
 	bool is_alive()const;
@@ -70,6 +70,8 @@ public:
 
     const vec2 &get_scale() const;
 
+    void set_velocity(vec2 vel);
+
 private:
 	float m_light_up_countdown_ms; // Used to keep track for how long the salmon should be lit up
 	bool m_is_alive; // True if the salmon is alive
@@ -77,7 +79,6 @@ private:
 	float outline_spawn_timer;
     outline_particle_emitter outline_emitter;
 
-    vec2 m_velocity; // Velocity
 	float m_update_rotation;
 	vec2 m_bbox;
 	std::vector<vec2> m_path;

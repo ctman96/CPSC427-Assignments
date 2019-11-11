@@ -84,8 +84,8 @@ void Pebbles::update(float ms) {
 
 		// Add gravity acceleration
 		if (pebble.acceleration.y < 8){
-			float gravity = 0.000001f * pebble.radius;
-			pebble.acceleration.y += gravity;
+			float gravity = 0.01f * pebble.radius;
+			pebble.acceleration.y += gravity * (ms / 1000);
 		}
 
 		// Accelerate
@@ -93,8 +93,23 @@ void Pebbles::update(float ms) {
 		pebble.velocity.y += pebble.acceleration.y * ms;
 
 
+		// Adjust for time
+		vec2 step = {pebble.velocity.x * (ms / 1000), pebble.velocity.y * (ms / 1000)};
+
 		// Move
-		pebble.position = add(pebble.position, pebble.velocity);
+		pebble.position = add(pebble.position, step);
+
+		// Decay velocity (Water resistance)
+		float friction = 0.01;
+		if (pebble.velocity.x > 0.f)
+			pebble.velocity.x -= friction * pebble.velocity.x;
+		else if (pebble.velocity.x < 0.f)
+			pebble.velocity.x += -friction * pebble.velocity.x;
+
+		if (pebble.velocity.y > 0.f)
+			pebble.velocity.y -= friction * pebble.velocity.y;
+		else if (motion.velocity.y < 0.f)
+			pebble.velocity.y += -friction * pebble.velocity.y;
 
 		it++;
 	}
@@ -112,8 +127,8 @@ void Pebbles::spawn_pebble(vec2 position, float dir)
 
 	// Rand angle should be maybe 180 degrees, around mouth, based on dir
 	auto randangle = dir + (float)((((rand()%(90))-45) * M_PI / 180.f));
-	auto randX = (float)(rand()%3+2);
-	auto randY = (float)(rand()%3+2);
+	auto randX = (float)(rand()%300+200);
+	auto randY = (float)(rand()%300+200);
 	pebble.velocity.x = randX * (float)sin(randangle);
     pebble.velocity.y = randY * (float)cos(randangle);
 
@@ -122,7 +137,7 @@ void Pebbles::spawn_pebble(vec2 position, float dir)
 	m_pebbles.emplace_back(pebble);
 }
 
-void Pebbles::collides_with(const Salmon& salmon, const std::vector<Fish> &fishes,  const std::vector<Turtle> &turtles)
+void Pebbles::collides_with(Salmon& salmon, const std::vector<Fish> &fishes,  const std::vector<Turtle> &turtles)
 {
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	// HANDLE PEBBLE COLLISIONS HERE
@@ -239,14 +254,20 @@ void Pebbles::collides_with(const Salmon& salmon, const std::vector<Fish> &fishe
 
 
 			float pmass = pebble.radius*100;
-			float tmass = salmonr*100;
+			float smass = salmonr*100;
 
 			vec2 svel = salmon.get_velocity(); // TODO
 
-			float vap1 = 2*tmass/(pmass+tmass);
+			float vap1 = 2*smass/(pmass+smass);
 			float vap2 = dot(sub(pebble.velocity, svel), sub(pebble.position, salmonpos)) / (float)pow(len(sub(pebble.position, salmonpos)), 2);
 			vec2 va = sub(pebble.velocity, mul(sub(pebble.position, salmonpos), vap1 * vap2));
+
+			float vbp1 = 2*pmass/(smass+pmass);
+			float vbp2 = dot(sub(svel, pebble.velocity), sub(salmonpos, pebble.position)) / (float)pow(len(sub(salmonpos, pebble.position)), 2);
+			vec2 vb = sub(svel, mul(sub(salmonpos, pebble.position), vbp1*vbp2));
+
 			pebble.velocity = va;
+			salmon.set_velocity(vb);
 		}
 
 

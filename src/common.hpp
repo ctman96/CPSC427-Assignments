@@ -111,6 +111,8 @@ protected:
 		vec2 position;
 		float radians;
 		float speed;
+		vec2 velocity;
+		vec2 acceleration;
 	} motion;
 
 	// Scale is used in the bounding box calculations, 

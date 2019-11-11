@@ -142,7 +142,6 @@ void Salmon::update(float ms, std::map<int, bool> &keyMap, vec2 mouse_position, 
 	transform.end();
 	m_debug_vertices.clear();
 
-	float step = motion.speed * (ms / 1000);
 	if (m_is_alive)
 	{
 	    // Delay changing rotation after a collision
@@ -158,15 +157,16 @@ void Salmon::update(float ms, std::map<int, bool> &keyMap, vec2 mouse_position, 
 		if (!m_auto) {
             // Move along direction
             if (keyMap[GLFW_KEY_UP]) {
-                accelX = 2.f * (float)sin(motion.radians);
-                accelY = 2.f * (float)cos(motion.radians);
+                accelX = 100.f * (float)sin(motion.radians);
+                accelY = 100.f * (float)cos(motion.radians);
             }
             if (keyMap[GLFW_KEY_DOWN]) {
-                accelX = -2.f * (float)sin(motion.radians);
-                accelY = -2.f * (float)cos(motion.radians);
+                accelX = -100.f * (float)sin(motion.radians);
+                accelY = -100.f * (float)cos(motion.radians);
             }
 
             // Rotate
+			float step = motion.speed * (ms / 1000);
             if (keyMap [GLFW_KEY_LEFT]) {
                 motion.radians += step / 20;
             }
@@ -183,29 +183,32 @@ void Salmon::update(float ms, std::map<int, bool> &keyMap, vec2 mouse_position, 
 		    }
 		}
 
-        accelerate(accelX,accelY);
+		motion.acceleration = {accelX, accelY};
+		accelerate();
 
 		if (!check_wall_collisions(screen)){
+			vec2 step = {motion.velocity.x * (ms / 1000), motion.velocity.y * (ms / 1000)};
 			// move based on velocity
-			motion.position.x += m_velocity.x;
-			motion.position.y += m_velocity.y;
+			motion.position.x = motion.position.x + step.x;
+			motion.position.y = motion.position.y + step.y;
 
 
 			// Decay velocity
 			float friction = 0.02;
-			if (m_velocity.x > 0.f)
-				m_velocity.x -= friction* m_velocity.x;
-			else if (m_velocity.x < 0.f)
-				m_velocity.x += -friction* m_velocity.x;
+			if (motion.velocity.x > 0.f)
+				motion.velocity.x -= friction * motion.velocity.x;
+			else if (motion.velocity.x < 0.f)
+				motion.velocity.x += -friction * motion.velocity.x;
 
-			if (m_velocity.y > 0.f)
-				m_velocity.y -= friction*m_velocity.y;
-			else if (m_velocity.y < 0.f)
-				m_velocity.y += -friction*m_velocity.y;
+			if (motion.velocity.y > 0.f)
+				motion.velocity.y -= friction * motion.velocity.y;
+			else if (motion.velocity.y < 0.f)
+				motion.velocity.y += -friction * motion.velocity.y;
         }
 	}
 	else
 	{
+		float step = motion.speed * (ms / 1000);
 		// If dead we make it face upwards and sink deep down
 		set_rotation(3.1415f);
 		move({ 0.f, step });
@@ -375,12 +378,12 @@ bool Salmon::check_wall_collisions(vec2 screen) {
 		vec3 pos = mul(transform.out, vec3{vertex.position.x, vertex.position.y, 1.0});
 		bool collision = false;
 		// If a collision on x, flip x velocity
-		if ((m_velocity.x < 0 && pos.x <= tl.x) || (m_velocity.x > 0 && pos.x >= br.x)) {
+		if ((motion.velocity.x < 0 && pos.x <= tl.x) || (motion.velocity.x > 0 && pos.x >= br.x)) {
 			flipX = true;
 			collision = true;
 		}
 		// If a collision on y, flip y velocity
-		if ((m_velocity.y < 0 && pos.y <= tl.y) || (m_velocity.y > 0 && pos.y >= br.y)) {
+		if ((motion.velocity.y < 0 && pos.y <= tl.y) || (motion.velocity.y > 0 && pos.y >= br.y)) {
 			flipY = true;
 			collision = true;
 		}
@@ -388,19 +391,19 @@ bool Salmon::check_wall_collisions(vec2 screen) {
 		if (collision)
 			m_debug_collision_points.emplace_back(vec2{pos.x, pos.y});
 	}
-	vec2 pre = m_velocity;
+	vec2 pre = motion.velocity;
 	// Flip x velocity
 	if (flipX) {
-		m_velocity.x = -m_velocity.x;
+		motion.velocity.x = -motion.velocity.x;
 	}
 	// Flip Y velocity
 	if (flipY) {
-		m_velocity.y = -m_velocity.y;
+		motion.velocity.y = -motion.velocity.y;
 	}
 	// Wait to adjust rotation until next frame
 	if (flipX || flipY) {
 		auto preangle = (float) atan2(pre.x, pre.y);
-		auto postangle = (float) atan2(m_velocity.x, m_velocity.y);
+		auto postangle = (float) atan2(motion.velocity.x, motion.velocity.y);
 		m_update_rotation = motion.radians + postangle - preangle;
 	}
 	return false;
@@ -426,19 +429,20 @@ void Salmon::set_rotation(float radians)
 	motion.radians = radians;
 }
 
-void Salmon::accelerate(float x, float y) {
-    float max = 4.f;
+void Salmon::accelerate() {
+	float max = 400.f;
+	if (max >= 0) {
+		float newX = motion.velocity.x + motion.acceleration.x;
+		if (newX > max) newX = max;
+		if (newX < -max) newX = -max;
 
-    float newX = m_velocity.x + x;
-    if (newX > max) newX = max;
-    if (newX < -max) newX = -max;
+		float newY = motion.velocity.y + motion.acceleration.y;
+		if (newY > max) newY = max;
+		if (newY < -max) newY = -max;
 
-    float newY = m_velocity.y + y;
-    if (newY > max) newY = max;
-    if (newY < -max) newY = -max;
-
-    m_velocity.x = newX;
-    m_velocity.y = newY;
+		motion.velocity.x = newX;
+		motion.velocity.y = newY;
+	}
 }
 
 bool Salmon::is_alive() const
@@ -487,10 +491,14 @@ void Salmon::toggleM_auto() {
 }
 
 const vec2 &Salmon::get_velocity() const {
-    return m_velocity;
+    return motion.velocity;
 }
 
 const vec2 &Salmon::get_scale() const {
 	return physics.scale;
+}
+
+void Salmon::set_velocity(vec2 vel) {
+	motion.velocity = vel;
 }
 
