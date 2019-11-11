@@ -502,3 +502,13 @@ void Salmon::set_velocity(vec2 vel) {
 	motion.velocity = vel;
 }
 
+bool Salmon::colides_with_circle(vec2 cpos, float cr) {
+	for(auto vertex : m_vertices) {
+		vec3 pos = mul(transform.out, vec3{vertex.position.x, vertex.position.y, 1.0});
+		float d = sqrtf(powf(pos.x - cpos.x, 2) + powf(pos.y - cpos.y, 2));
+		if (d < cr)
+			return true;
+	}
+	return false;
+}
+

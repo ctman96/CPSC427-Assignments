@@ -222,7 +222,6 @@ void Pebbles::collides_with(Salmon& salmon, std::vector<Fish> &fishes, std::vect
 			}
 		}
 
-		// TODO could pull out fish/turtle collision code into reusable function
 		for (auto& turtle : turtles) {
 			vec2 turtlepos = turtle.get_position();
 			float turtler = std::max(turtle.get_bounding_box().x, turtle.get_bounding_box().y) * 0.6f;
@@ -238,7 +237,7 @@ void Pebbles::collides_with(Salmon& salmon, std::vector<Fish> &fishes, std::vect
 				float pmass = pebble.radius*100;
 				float tmass = turtler*50;
 
-				vec2 tvel = turtle.getVel(); // TODO
+				vec2 tvel = turtle.getVel();
 
 				float vap1 = 2*tmass/(pmass+tmass);
 				float vap2 = dot(sub(pebble.velocity, tvel), sub(pebble.position, turtlepos)) / (float)pow(len(sub(pebble.position, turtlepos)), 2);
@@ -253,10 +252,9 @@ void Pebbles::collides_with(Salmon& salmon, std::vector<Fish> &fishes, std::vect
 			}
 		}
 
-		// TODO salmon - bounding box then vertices? or can just do radius-based?
 		vec2 salmonpos = salmon.get_position();
-		float salmonr = std::max(salmon.get_scale().x, salmon.get_scale().y) * 1.2f;
-		if (pebble.collides_with(salmonpos, salmonr)) {
+		float salmonr = std::max(salmon.get_scale().x , salmon.get_scale().y * 1.5f);// std::max(salmon.get_bounding_box().x / 2, salmon.get_bounding_box().y / 2);
+		if (pebble.collides_with(salmonpos, salmonr) /*&& salmon.colides_with_circle(pebble.position, pebble.radius)*/) {
 			auto dist = std::sqrt((float)pow(pebble.position.x - salmonpos.x,2) + (float)pow(pebble.position.y - salmonpos.y, 2));
 			float overlap = (dist - pebble.radius - salmonr);
 			float dx = (pebble.position.x - salmonpos.x)/dist;
@@ -268,7 +266,7 @@ void Pebbles::collides_with(Salmon& salmon, std::vector<Fish> &fishes, std::vect
 			float pmass = pebble.radius*100;
 			float smass = salmonr*100;
 
-			vec2 svel = salmon.get_velocity(); // TODO
+			vec2 svel = salmon.get_velocity();
 
 			float vap1 = 2*smass/(pmass+smass);
 			float vap2 = dot(sub(pebble.velocity, svel), sub(pebble.position, salmonpos)) / (float)pow(len(sub(pebble.position, salmonpos)), 2);

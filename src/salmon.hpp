@@ -72,6 +72,8 @@ public:
 
     void set_velocity(vec2 vel);
 
+    bool colides_with_circle(vec2 pos, float r);
+
 private:
 	float m_light_up_countdown_ms; // Used to keep track for how long the salmon should be lit up
 	bool m_is_alive; // True if the salmon is alive
